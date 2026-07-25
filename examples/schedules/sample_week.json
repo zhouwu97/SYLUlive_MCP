@@ -1,0 +1,18 @@
+{
+  "week_start": "2026-07-27",
+  "timezone": "Asia/Shanghai",
+  "fixed_events": [
+    {
+      "title": "课程",
+      "weekday": 1,
+      "start": "08:00",
+      "end": "11:40"
+    },
+    {
+      "title": "实验课",
+      "weekday": 3,
+      "start": "14:00",
+      "end": "17:00"
+    }
+  ]
+}

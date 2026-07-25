@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "hy3-campus-decision": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/ABSOLUTE/PATH/TO/SYLUlive_MCP",
+        "run",
+        "hy3-campus-decision-mcp"
+      ],
+      "env": {
+        "HY3_MODE": "fixture",
+        "HY3_CAMPUS_ROOT": "./examples",
+        "HY3_FIXTURE_ROOT": "./tests/fixtures/hy3"
+      }
+    }
+  }
+}
