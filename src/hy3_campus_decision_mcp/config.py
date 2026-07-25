@@ -1,4 +1,4 @@
-"""Runtime settings loaded from the process environment."""
+"""从进程环境加载的运行配置。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Hy3Mode(StrEnum):
-    """Supported model-provider modes."""
+    """支持的模型提供方运行模式。"""
 
     LIVE = "live"
     FIXTURE = "fixture"
@@ -18,7 +18,7 @@ class Hy3Mode(StrEnum):
 
 
 class Settings(BaseSettings):
-    """Configuration for one isolated MCP process."""
+    """单个隔离 MCP 进程的配置。"""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -98,24 +98,24 @@ class Settings(BaseSettings):
 
     @property
     def campus_root_path(self) -> Path:
-        """Resolve the configured workspace root without exposing it to callers."""
+        """解析配置的工作区根目录，但不将绝对路径暴露给调用方。"""
 
         return self.campus_root.expanduser().resolve()
 
     @property
     def fixture_root_path(self) -> Path:
-        """Resolve fixture storage for local-only provider responses."""
+        """解析仅供本地 Provider 响应使用的 Fixture 存储目录。"""
 
         return self.fixture_root.expanduser().resolve()
 
     @property
     def has_api_key(self) -> bool:
-        """Report key presence without returning the secret."""
+        """仅报告密钥是否存在，不返回密钥内容。"""
 
         return bool(self.api_key.get_secret_value().strip())
 
 
 def load_settings() -> Settings:
-    """Load one validated settings object for the MCP process."""
+    """为 MCP 进程加载一份通过校验的配置对象。"""
 
     return Settings()

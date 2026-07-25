@@ -1,4 +1,4 @@
-"""Minimal evidence-bound prompts for the OpenAI-compatible provider."""
+"""面向 OpenAI 兼容 Provider 的最小证据约束提示词。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 
 def build_messages(tool_name: str, context: dict[str, Any]) -> list[dict[str, str]]:
-    """Build a JSON-only prompt that prevents the model from owning local facts."""
+    """构造仅允许 JSON 的提示词，阻止模型篡改本地事实归属。"""
 
     system = (
         "You are Hy3 assisting a campus decision MCP server. Return JSON only. "

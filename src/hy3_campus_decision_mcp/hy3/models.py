@@ -1,4 +1,4 @@
-"""Strict, model-owned narrative output contracts."""
+"""严格的模型自有叙事输出契约。"""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class StrictOutputModel(BaseModel):
-    """Reject model fields that are not part of the explicitly owned narrative surface."""
+    """拒绝不属于明确模型叙事职责范围的字段。"""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
 class CampusQuestionOutput(StrictOutputModel):
-    """Narrative content returned by the campus-question provider."""
+    """校园问答 Provider 返回的叙事内容。"""
 
     answer: str = Field(min_length=1, max_length=4_000)
     rationale: str = Field(min_length=1, max_length=4_000)
@@ -21,7 +21,7 @@ class CampusQuestionOutput(StrictOutputModel):
 
 
 class CompetitionOutput(StrictOutputModel):
-    """Narrative content returned for a comparison result."""
+    """赛事比较结果对应的叙事内容。"""
 
     recommendation: str = Field(min_length=1, max_length=4_000)
     rationale: str = Field(min_length=1, max_length=4_000)
@@ -29,7 +29,7 @@ class CompetitionOutput(StrictOutputModel):
 
 
 class AcademicOutput(StrictOutputModel):
-    """Narrative interpretation of locally computed academic findings."""
+    """对本地计算出的学业结论进行叙事解释。"""
 
     risk_summary: str = Field(min_length=1, max_length=4_000)
     priority_actions: list[str] = Field(default_factory=list, max_length=20)
@@ -37,7 +37,7 @@ class AcademicOutput(StrictOutputModel):
 
 
 class WeeklyPlanOutput(StrictOutputModel):
-    """Narrative organization accompanying a locally validated weekly schedule."""
+    """伴随本地校验周计划的叙事组织内容。"""
 
     weekly_strategy: str = Field(min_length=1, max_length=4_000)
     priority_order: list[str] = Field(default_factory=list, max_length=20)

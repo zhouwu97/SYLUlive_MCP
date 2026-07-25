@@ -1,4 +1,4 @@
-"""Recursive sensitive-field detection for academic snapshots."""
+"""针对学业快照的递归敏感字段检测。"""
 
 from __future__ import annotations
 
@@ -32,13 +32,13 @@ _SENSITIVE_NORMALIZED_FIELDS = frozenset(
 
 
 def normalize_field_name(field_name: str) -> str:
-    """Normalize case, separators, and camel-case variants into one comparable form."""
+    """将大小写、分隔符和驼峰变体归一为可比较形式。"""
 
     return re.sub(r"[^a-z0-9]", "", field_name.lower())
 
 
 def find_sensitive_field(value: Any) -> str | None:
-    """Return the first prohibited key without inspecting or returning any field value."""
+    """返回首个禁用键名，不检查或返回任何字段值。"""
 
     if isinstance(value, Mapping):
         for key, nested_value in value.items():
@@ -57,7 +57,7 @@ def find_sensitive_field(value: Any) -> str | None:
 
 
 def reject_sensitive_fields(value: Any) -> None:
-    """Raise a value-free error when protected identity or credential fields are present."""
+    """发现受保护的身份或凭据字段时抛出不包含字段值的错误。"""
 
     if find_sensitive_field(value) is not None:
         raise SafetyViolationError(

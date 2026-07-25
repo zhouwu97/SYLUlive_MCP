@@ -1,4 +1,4 @@
-"""Workspace-constrained path resolution for local examples."""
+"""本地示例使用的工作区受限路径解析。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from ..errors import InputLimitError, SafetyViolationError
 
 
 class WorkspacePathPolicy:
-    """Resolve only existing, supported files under a configured workspace root."""
+    """仅解析配置工作区根目录下存在且受支持的文件。"""
 
     def __init__(
         self,
@@ -24,12 +24,18 @@ class WorkspacePathPolicy:
 
     @property
     def root(self) -> Path:
-        """Return the internal root for trusted application code only."""
+        """仅向可信应用代码返回内部根目录。"""
 
         return self._root
 
+    @property
+    def max_file_bytes(self) -> int:
+        """返回供只读仓库执行预筛选的文件大小上限。"""
+
+        return self._max_file_bytes
+
     def resolve_file(self, relative_path: str) -> Path:
-        """Resolve one allowed relative file while preventing traversal and symlink escape."""
+        """解析一个允许的相对文件，并防止路径穿越和符号链接越界。"""
 
         if not relative_path or relative_path.strip() != relative_path:
             raise SafetyViolationError("path_invalid", "A non-empty relative path is required.")
@@ -61,7 +67,7 @@ class WorkspacePathPolicy:
         return candidate
 
     def relative_identifier(self, file_path: Path) -> str:
-        """Return a portable workspace-relative identifier for client-visible source metadata."""
+        """为客户端可见的来源元数据返回可移植工作区相对标识。"""
 
         resolved = file_path.resolve()
         if not resolved.is_relative_to(self._root):

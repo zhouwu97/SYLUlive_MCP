@@ -1,1 +1,1 @@
-"""MCP tool implementations."""
+"""MCP 工具实现。"""

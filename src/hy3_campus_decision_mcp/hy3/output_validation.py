@@ -1,4 +1,4 @@
-"""Validate provider output before it can enter a tool envelope."""
+"""在 Provider 输出进入工具信封前进行校验。"""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def validate_provider_output(
     *,
     allowed_source_ids: Iterable[str] = (),
 ) -> OutputModelT:
-    """Validate structured output and bind any source IDs to trusted local evidence."""
+    """校验结构化输出，并将来源 ID 绑定到可信本地证据。"""
 
     try:
         parsed = output_model.model_validate(raw_output)

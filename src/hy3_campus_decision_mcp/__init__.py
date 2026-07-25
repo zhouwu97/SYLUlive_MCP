@@ -1,4 +1,4 @@
-"""Hy3 Campus Decision Copilot MCP package."""
+"""校园决策助手的 Hy3 MCP 包。"""
 
 from .constants import PACKAGE_VERSION
 

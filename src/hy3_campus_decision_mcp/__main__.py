@@ -1,4 +1,4 @@
-"""Command-line entry point for the stdio MCP server."""
+"""MCP stdio Server 的命令行入口。"""
 
 from .server import main
 

@@ -1,4 +1,4 @@
-"""Normalization and safety checks for OpenAI-compatible Hy3 endpoints."""
+"""兼容 OpenAI 的 Hy3 端点规范化与安全检查。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from ..errors import Hy3ConfigurationError
 
 
 def _is_allowed_http_host(host: str, allow_private_http: bool) -> bool:
-    """Allow loopback HTTP and explicit private-network HTTP, but never public HTTP."""
+    """仅允许回环 HTTP 或显式授权的私网 HTTP，永不允许公网 HTTP。"""
 
     if host.lower() == "localhost":
         return True
@@ -25,7 +25,7 @@ def _is_allowed_http_host(host: str, allow_private_http: bool) -> bool:
 
 
 def normalize_hy3_endpoint(raw_base: str, *, allow_private_http: bool) -> str:
-    """Produce exactly one `/v1/chat/completions` endpoint from a safe base URL."""
+    """从安全基址生成唯一的 `/v1/chat/completions` 端点。"""
 
     raw_base = raw_base.strip()
     parsed = urlsplit(raw_base)

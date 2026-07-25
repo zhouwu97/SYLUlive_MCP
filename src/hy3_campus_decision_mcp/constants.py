@@ -1,4 +1,4 @@
-"""Stable package constants."""
+"""包内稳定常量。"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Local safety policies used before model calls and file access."""
+"""模型调用与文件访问前使用的本地安全策略。"""
 
 from .endpoint_policy import normalize_hy3_endpoint
 from .limits import enforce_input_size

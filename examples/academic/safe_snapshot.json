@@ -1,0 +1,26 @@
+{
+  "courses": [
+    {
+      "course_name": "高等数学",
+      "credits": 4,
+      "is_required": true,
+      "grade": 82
+    },
+    {
+      "course_name": "程序设计基础",
+      "credits": 3,
+      "is_required": true,
+      "grade": 58
+    },
+    {
+      "course_name": "创新实践",
+      "credits": 2,
+      "is_required": false,
+      "grade": null
+    }
+  ],
+  "earned_credits": 96,
+  "required_credits": 108,
+  "erke_earned": 38,
+  "erke_required": 60
+}

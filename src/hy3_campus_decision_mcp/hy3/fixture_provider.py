@@ -1,4 +1,4 @@
-"""Read fixed local provider responses for deterministic tests and demos."""
+"""读取固定本地 Provider 响应，用于确定性测试和演示。"""
 
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ from ..errors import Hy3ProviderError
 
 
 class FixtureProvider:
-    """Expose only known, tool-named JSON fixtures from a trusted fixture directory."""
+    """仅从可信 Fixture 目录公开已知工具名称对应的 JSON Fixture。"""
 
     def __init__(self, fixture_root: Path) -> None:
         self._fixture_root = fixture_root.resolve()
 
     def load(self, tool_name: str) -> Any:
-        """Load one fixture without returning its absolute filesystem location on failure."""
+        """加载单个 Fixture，失败时不返回其绝对文件系统位置。"""
 
         file_path = (self._fixture_root / f"{tool_name}.json").resolve()
         if not file_path.is_relative_to(self._fixture_root) or not file_path.is_file():

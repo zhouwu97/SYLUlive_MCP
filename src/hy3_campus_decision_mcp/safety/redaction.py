@@ -1,4 +1,4 @@
-"""Small helpers for keeping diagnostic structures free of secrets."""
+"""确保诊断数据结构不含密钥的小型辅助函数。"""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ _SECRET_KEYS = frozenset(
 
 
 def redact_for_log(value: Any) -> Any:
-    """Recursively redact credential-shaped mapping values before diagnostic logging."""
+    """在诊断日志前递归脱敏形似凭据的映射值。"""
 
     if isinstance(value, Mapping):
         return {

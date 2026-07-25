@@ -1,4 +1,4 @@
-"""OpenAI-compatible Hy3 client with explicit Live, Fixture, and Disabled modes."""
+"""具备明确 Live、Fixture 与 Disabled 模式的 OpenAI 兼容 Hy3 客户端。"""
 
 from __future__ import annotations
 
@@ -21,14 +21,14 @@ OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 
 @dataclass(frozen=True)
 class GeneratedOutput:
-    """Validated provider payload with the policy-selected reasoning effort."""
+    """经过校验的 Provider 负载及工具策略指定的推理强度。"""
 
     data: dict[str, Any]
     reasoning_effort: str
 
 
 class Hy3Client:
-    """Provider adapter that never silently falls back from Live to Fixture."""
+    """绝不从 Live 静默降级为 Fixture 的 Provider 适配器。"""
 
     def __init__(
         self,
@@ -49,7 +49,7 @@ class Hy3Client:
         reasoning_effort: str,
         allowed_source_ids: Iterable[str] = (),
     ) -> GeneratedOutput:
-        """Generate and validate a tool-owned narrative according to the active mode."""
+        """根据当前模式生成并校验由工具拥有的叙事内容。"""
 
         if self._settings.mode is Hy3Mode.DISABLED:
             raise Hy3DisabledError()
@@ -143,7 +143,7 @@ class Hy3Client:
         messages: list[dict[str, str]],
         reasoning_effort: str,
     ) -> str:
-        """Issue a redirect-free chat-completions request and extract one text content field."""
+        """发起禁止重定向的 chat-completions 请求，并提取单个文本内容字段。"""
 
         payload = {
             "model": self._settings.model_name,
