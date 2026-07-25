@@ -36,7 +36,7 @@ async def compare_competitions(runtime: ToolRuntime, raw: dict[str, Any]) -> dic
                 },
             ),
             output_model=CompetitionOutput,
-            reasoning_effort="medium",
+            reasoning_effort="low",
         )
         return ok_envelope(
             result=generated.data,

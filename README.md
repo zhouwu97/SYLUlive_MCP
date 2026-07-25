@@ -1,8 +1,8 @@
 # Hy3 Campus Decision Copilot
 
-基于 Hy3 的校园学业、竞赛与时间决策 MCP Server。项目以 `stdio` 方式独立运行在
-`E:\AI\xynewui_mcp`，不依赖也不会修改 SYLUlive Flutter 客户端、Go 后端、PostgreSQL、
-真实学生账号、教务密码、Cookie、JWT 或生产 RAG。
+基于 Hy3 的校园学业、竞赛与时间决策 MCP Server。项目以本地 `stdio` 方式独立运行，不依赖
+SYLUlive 客户端、后端或生产数据，也不会修改 Flutter 客户端、Go 后端、PostgreSQL、真实学生
+账号、教务密码、Cookie、JWT 或生产 RAG。
 
 第一版仅提供只读的分析、比较、解释与规划能力。示例资料均为演示数据，不能替代学校当年
 正式通知、学院审核或个人学业指导。
@@ -23,10 +23,10 @@
 
 - Python 3.11 或更高版本，推荐 Python 3.12。
 - [uv](https://docs.astral.sh/uv/) 用于依赖和虚拟环境管理。
-- Windows PowerShell 示例中的项目目录为 `E:\AI\xynewui_mcp`。
+- Windows PowerShell 示例中的项目目录为 `C:/path/to/SYLUlive_MCP`。
 
 ```powershell
-cd E:\AI\xynewui_mcp
+cd C:/path/to/SYLUlive_MCP
 uv sync
 Copy-Item .env.example .env
 ```
@@ -44,7 +44,7 @@ Copy-Item .env.example .env
 启动 Fixture Server：
 
 ```powershell
-cd E:\AI\xynewui_mcp
+cd C:/path/to/SYLUlive_MCP
 $env:HY3_MODE = "fixture"
 $env:HY3_CAMPUS_ROOT = "./examples"
 $env:HY3_FIXTURE_ROOT = "./tests/fixtures/hy3"
@@ -68,7 +68,7 @@ uv run hy3-campus-decision-mcp
   "command": "uv",
   "args": [
     "--directory",
-    "E:/AI/xynewui_mcp",
+    "/ABSOLUTE/PATH/TO/SYLUlive_MCP",
     "run",
     "hy3-campus-decision-mcp"
   ],
@@ -80,8 +80,9 @@ uv run hy3-campus-decision-mcp
 }
 ```
 
-若将仓库放到其他位置，只修改 `--directory` 的绝对目录；`HY3_CAMPUS_ROOT` 和
-`HY3_FIXTURE_ROOT` 保持相对项目根目录的路径即可。
+将 `/ABSOLUTE/PATH/TO/SYLUlive_MCP` 替换为本机绝对目录；Windows 可写为
+`C:/path/to/SYLUlive_MCP`。`HY3_CAMPUS_ROOT` 和 `HY3_FIXTURE_ROOT` 保持相对项目根目录的
+路径即可。
 
 ## 工具输入契约
 
@@ -98,7 +99,7 @@ uv run hy3-campus-decision-mcp
     "provider": "hy3",
     "model": "hy3",
     "mode": "fixture",
-    "reasoning_effort": "medium"
+    "reasoning_effort": "low"
   },
   "meta": {
     "schema_version": "1",
@@ -206,7 +207,7 @@ uv run hy3-campus-decision-mcp
 下列命令全部在 Fixture 模式下运行，不需要 Hy3 Key：
 
 ```powershell
-cd E:\AI\xynewui_mcp
+cd C:/path/to/SYLUlive_MCP
 uv run ruff check .
 uv run ruff format --check .
 uv run pytest -q
@@ -224,7 +225,7 @@ uv run python scripts/validate_examples.py
 真实 Hy3 验证不会进入公共 CI，也不能由 Fixture 结果替代。取得合法 Hy3 API 配置后，使用：
 
 ```powershell
-cd E:\AI\xynewui_mcp
+cd C:/path/to/SYLUlive_MCP
 $env:HY3_MODE = "live"
 $env:HY3_API_BASE = "https://your-hy3-host/v1"
 $env:HY3_API_KEY = "<仅在当前终端设置>"

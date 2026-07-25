@@ -50,7 +50,7 @@ async def answer_campus_question(
                 },
             ),
             output_model=CampusQuestionOutput,
-            reasoning_effort="medium",
+            reasoning_effort="low",
             allowed_source_ids=[document.source_id for document in documents],
         )
         result = dict(generated.data)

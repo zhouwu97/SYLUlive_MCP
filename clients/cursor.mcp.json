@@ -4,7 +4,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "E:/AI/xynewui_mcp",
+        "/ABSOLUTE/PATH/TO/SYLUlive_MCP",
         "run",
         "hy3-campus-decision-mcp"
       ],

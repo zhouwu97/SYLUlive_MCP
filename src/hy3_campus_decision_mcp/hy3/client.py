@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 import httpx
 from pydantic import BaseModel
@@ -17,6 +17,7 @@ from .fixture_provider import FixtureProvider
 from .output_validation import validate_provider_output
 
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
+ReasoningEffort = Literal["no_think", "low", "high"]
 
 
 @dataclass(frozen=True)
@@ -24,7 +25,7 @@ class GeneratedOutput:
     """经过校验的 Provider 负载及工具策略指定的推理强度。"""
 
     data: dict[str, Any]
-    reasoning_effort: str
+    reasoning_effort: ReasoningEffort
 
 
 class Hy3Client:
@@ -46,7 +47,7 @@ class Hy3Client:
         tool_name: str,
         messages: list[dict[str, str]],
         output_model: type[OutputModelT],
-        reasoning_effort: str,
+        reasoning_effort: ReasoningEffort,
         allowed_source_ids: Iterable[str] = (),
     ) -> GeneratedOutput:
         """根据当前模式生成并校验由工具拥有的叙事内容。"""
@@ -76,7 +77,7 @@ class Hy3Client:
         self,
         *,
         messages: list[dict[str, str]],
-        reasoning_effort: str,
+        reasoning_effort: ReasoningEffort,
         output_model: type[OutputModelT],
         allowed_source_ids: Iterable[str],
     ) -> OutputModelT:
@@ -141,7 +142,7 @@ class Hy3Client:
         *,
         endpoint: str,
         messages: list[dict[str, str]],
-        reasoning_effort: str,
+        reasoning_effort: ReasoningEffort,
     ) -> str:
         """发起禁止重定向的 chat-completions 请求，并提取单个文本内容字段。"""
 
@@ -150,7 +151,7 @@ class Hy3Client:
             "messages": messages,
             "temperature": self._settings.default_temperature,
             "top_p": self._settings.default_top_p,
-            "reasoning_effort": reasoning_effort,
+            "chat_template_kwargs": {"reasoning_effort": reasoning_effort},
             "response_format": {"type": "json_object"},
         }
         headers = {
