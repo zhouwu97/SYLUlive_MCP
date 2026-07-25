@@ -58,3 +58,6 @@ async def test_live_request_nests_reasoning_effort_in_chat_template_kwargs() -> 
     assert len(requests) == 1
     assert "reasoning_effort" not in requests[0]
     assert requests[0]["chat_template_kwargs"] == {"reasoning_effort": "low"}
+    schema_instruction = requests[0]["messages"][0]["content"]
+    assert '"recommendation"' in schema_instruction
+    assert '"rationale"' in schema_instruction

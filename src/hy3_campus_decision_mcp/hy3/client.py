@@ -92,7 +92,7 @@ class Hy3Client:
             self._settings.api_base,
             allow_private_http=self._settings.allow_private_http,
         )
-        request_messages = list(messages)
+        request_messages = _messages_with_output_schema(messages, output_model)
         for attempt in range(2):
             raw_content = await self._post_completion(
                 endpoint=endpoint,
@@ -187,3 +187,25 @@ class Hy3Client:
                 "Hy3 did not return text JSON content.",
             )
         return content
+
+
+def _messages_with_output_schema(
+    messages: list[dict[str, str]],
+    output_model: type[BaseModel],
+) -> list[dict[str, str]]:
+    """将本次调用的严格输出契约发送给 Provider，避免只返回任意 JSON。"""
+
+    schema = json.dumps(
+        output_model.model_json_schema(),
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    schema_instruction = {
+        "role": "system",
+        "content": (
+            "Return only a JSON object that validates exactly against this JSON Schema. "
+            "Include every required field and do not use Markdown. JSON Schema: "
+            f"{schema}"
+        ),
+    }
+    return [schema_instruction, *messages]
