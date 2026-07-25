@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "hy3-campus-decision": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "E:/AI/xynewui_mcp",
+        "run",
+        "hy3-campus-decision-mcp"
+      ],
+      "env": {
+        "HY3_MODE": "fixture",
+        "HY3_CAMPUS_ROOT": "./examples",
+        "HY3_FIXTURE_ROOT": "./tests/fixtures/hy3"
+      }
+    }
+  }
+}
