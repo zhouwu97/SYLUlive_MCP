@@ -1,0 +1,18 @@
+{
+  "snapshot": {
+    "courses": [
+      {
+        "course_name": "程序设计基础",
+        "credits": 3,
+        "grade": 80,
+        "nested": {
+          "access_token": "must-not-reach-provider"
+        }
+      }
+    ],
+    "earned_credits": 3,
+    "required_credits": 108,
+    "erke_earned": 0,
+    "erke_required": 60
+  }
+}
