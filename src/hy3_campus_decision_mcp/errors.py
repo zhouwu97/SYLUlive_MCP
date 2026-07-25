@@ -17,3 +17,19 @@ class Hy3DisabledError(CampusMcpError):
 
     def __init__(self) -> None:
         super().__init__("hy3_disabled", "Hy3 provider is disabled; only status is available.")
+
+
+class SafetyViolationError(CampusMcpError):
+    """Raised when an input conflicts with the local safety policy."""
+
+
+class InputLimitError(CampusMcpError):
+    """Raised when input or source limits are exceeded."""
+
+
+class Hy3ConfigurationError(CampusMcpError):
+    """Raised when Live mode lacks a safe, complete configuration."""
+
+
+class Hy3ProviderError(CampusMcpError):
+    """Raised when the external provider cannot return a usable result."""
