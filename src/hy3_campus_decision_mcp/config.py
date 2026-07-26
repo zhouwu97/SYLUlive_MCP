@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore",
+        extra="forbid",
         populate_by_name=True,
     )
 
@@ -84,7 +84,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("HY3_LOG_LEVEL", "log_level"),
     )
     default_temperature: float = Field(
-        default=0.9,
+        default=0.2,
         ge=0,
         le=2,
         validation_alias=AliasChoices("HY3_DEFAULT_TEMPERATURE", "default_temperature"),
