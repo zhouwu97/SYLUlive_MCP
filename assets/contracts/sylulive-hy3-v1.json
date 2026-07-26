@@ -1,0 +1,1987 @@
+{
+  "contract_version": "sylulive-hy3/1",
+  "tools": {
+    "analyze_academic_snapshot": {
+      "schema_sha256": "11e52df593997543c584d3efc1e3b04e13d629a2cf33872adc1dad0223dc7759",
+      "input_schema": {
+        "$defs": {
+          "AcademicSnapshot": {
+            "additionalProperties": false,
+            "description": "本地计算所需的课程、学分和二课进度数据。",
+            "properties": {
+              "courses": {
+                "items": {
+                  "$ref": "#/$defs/CourseRecord"
+                },
+                "maxItems": 500,
+                "title": "Courses",
+                "type": "array"
+              },
+              "earned_credits": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Earned Credits",
+                "type": "number"
+              },
+              "required_credits": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Required Credits",
+                "type": "number"
+              },
+              "erke_earned": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Erke Earned",
+                "type": "number"
+              },
+              "erke_required": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Erke Required",
+                "type": "number"
+              }
+            },
+            "required": [
+              "earned_credits",
+              "required_credits",
+              "erke_earned",
+              "erke_required"
+            ],
+            "title": "AcademicSnapshot",
+            "type": "object"
+          },
+          "CourseRecord": {
+            "additionalProperties": false,
+            "description": "单门课程的最小非身份化记录。",
+            "properties": {
+              "course_name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Course Name",
+                "type": "string"
+              },
+              "credits": {
+                "anyOf": [
+                  {
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Credits"
+              },
+              "is_required": {
+                "default": false,
+                "title": "Is Required",
+                "type": "boolean"
+              },
+              "grade": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Grade"
+              },
+              "passed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Passed"
+              }
+            },
+            "required": [
+              "course_name"
+            ],
+            "title": "CourseRecord",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "要求内联快照和相对文件路径二选一。",
+        "properties": {
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AcademicSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "snapshot_path": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Snapshot Path"
+          }
+        },
+        "title": "AcademicAnalysisInput",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "AcademicFindings": {
+            "additionalProperties": false,
+            "properties": {
+              "failed_course_count": {
+                "maximum": 500,
+                "minimum": 0,
+                "title": "Failed Course Count",
+                "type": "integer"
+              },
+              "failed_required_credits": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Failed Required Credits",
+                "type": "number"
+              },
+              "earned_credits": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Earned Credits",
+                "type": "number"
+              },
+              "credit_gap": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Credit Gap",
+                "type": "number"
+              },
+              "erke_gap": {
+                "maximum": 1000,
+                "minimum": 0,
+                "title": "Erke Gap",
+                "type": "number"
+              },
+              "unknown_grade_course_count": {
+                "maximum": 500,
+                "minimum": 0,
+                "title": "Unknown Grade Course Count",
+                "type": "integer"
+              },
+              "missing_credit_course_count": {
+                "maximum": 500,
+                "minimum": 0,
+                "title": "Missing Credit Course Count",
+                "type": "integer"
+              },
+              "data_completeness_percent": {
+                "maximum": 100,
+                "minimum": 0,
+                "title": "Data Completeness Percent",
+                "type": "number"
+              },
+              "failed_courses": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 500,
+                "title": "Failed Courses",
+                "type": "array"
+              }
+            },
+            "required": [
+              "failed_course_count",
+              "failed_required_credits",
+              "earned_credits",
+              "credit_gap",
+              "erke_gap",
+              "unknown_grade_course_count",
+              "missing_credit_course_count",
+              "data_completeness_percent"
+            ],
+            "title": "AcademicFindings",
+            "type": "object"
+          },
+          "AcademicOutput": {
+            "additionalProperties": false,
+            "description": "对本地计算出的学业结论进行叙事解释。",
+            "properties": {
+              "risk_summary": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Risk Summary",
+                "type": "string"
+              },
+              "priority_actions": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Priority Actions",
+                "type": "array"
+              },
+              "items_to_confirm": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Items To Confirm",
+                "type": "array"
+              }
+            },
+            "required": [
+              "risk_summary"
+            ],
+            "title": "AcademicOutput",
+            "type": "object"
+          },
+          "AcademicSuccessEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "ok",
+                "title": "Status",
+                "type": "string"
+              },
+              "result": {
+                "$ref": "#/$defs/AcademicOutput"
+              },
+              "deterministic_findings": {
+                "$ref": "#/$defs/AcademicFindings"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/SourceMetadata"
+                },
+                "maxItems": 20,
+                "title": "Sources",
+                "type": "array"
+              },
+              "warnings": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Warnings",
+                "type": "array"
+              },
+              "model": {
+                "$ref": "#/$defs/ModelMetadata"
+              },
+              "meta": {
+                "$ref": "#/$defs/ResultMetadata"
+              }
+            },
+            "required": [
+              "status",
+              "result",
+              "deterministic_findings",
+              "model",
+              "meta"
+            ],
+            "title": "AcademicSuccessEnvelope",
+            "type": "object"
+          },
+          "ErrorEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "error",
+                "title": "Status",
+                "type": "string"
+              },
+              "code": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "code",
+              "message"
+            ],
+            "title": "ErrorEnvelope",
+            "type": "object"
+          },
+          "ModelMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "const": "hy3",
+                "title": "Provider",
+                "type": "string"
+              },
+              "model": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Model",
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "live",
+                  "fixture"
+                ],
+                "title": "Mode",
+                "type": "string"
+              },
+              "reasoning_effort": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Reasoning Effort",
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "mode",
+              "reasoning_effort"
+            ],
+            "title": "ModelMetadata",
+            "type": "object"
+          },
+          "ResultMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {
+                "const": "1",
+                "title": "Schema Version",
+                "type": "string"
+              },
+              "generated_at": {
+                "format": "date-time",
+                "title": "Generated At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema_version",
+              "generated_at"
+            ],
+            "title": "ResultMetadata",
+            "type": "object"
+          },
+          "SourceMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "source_id": {
+                "maxLength": 300,
+                "minLength": 1,
+                "title": "Source Id",
+                "type": "string"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Title",
+                "type": "string"
+              },
+              "path": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "title": "Path",
+                "type": "string"
+              },
+              "source_type": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Source Type",
+                "type": "string"
+              },
+              "official": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Official"
+              },
+              "effective_date": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective Date"
+              }
+            },
+            "required": [
+              "source_id",
+              "title",
+              "path",
+              "source_type"
+            ],
+            "title": "SourceMetadata",
+            "type": "object"
+          }
+        },
+        "discriminator": {
+          "mapping": {
+            "error": "#/$defs/ErrorEnvelope",
+            "ok": "#/$defs/AcademicSuccessEnvelope"
+          },
+          "propertyName": "status"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/AcademicSuccessEnvelope"
+          },
+          {
+            "$ref": "#/$defs/ErrorEnvelope"
+          }
+        ],
+        "type": "object"
+      }
+    },
+    "answer_campus_question": {
+      "schema_sha256": "8045d6e415e1b8f95906e31e60e25cfc250e311486549848820dbaf3c0b82da5",
+      "input_schema": {
+        "additionalProperties": false,
+        "description": "限定检索范围和可返回的本地证据数量。",
+        "properties": {
+          "query": {
+            "maxLength": 6000,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "policy",
+                  "academic",
+                  "competition",
+                  "general"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category"
+          },
+          "max_sources": {
+            "default": 5,
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Max Sources",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "CampusQuestionInput",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "CampusQuestionFindings": {
+            "additionalProperties": false,
+            "properties": {
+              "retrieved_source_count": {
+                "maximum": 20,
+                "minimum": 0,
+                "title": "Retrieved Source Count",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "retrieved_source_count"
+            ],
+            "title": "CampusQuestionFindings",
+            "type": "object"
+          },
+          "CampusQuestionOutput": {
+            "additionalProperties": false,
+            "description": "校园问答 Provider 返回的叙事内容。",
+            "properties": {
+              "answer": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Answer",
+                "type": "string"
+              },
+              "rationale": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Rationale",
+                "type": "string"
+              },
+              "source_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Source Ids",
+                "type": "array"
+              },
+              "missing_information": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Missing Information",
+                "type": "array"
+              }
+            },
+            "required": [
+              "answer",
+              "rationale"
+            ],
+            "title": "CampusQuestionOutput",
+            "type": "object"
+          },
+          "CampusQuestionSuccessEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "ok",
+                "title": "Status",
+                "type": "string"
+              },
+              "result": {
+                "$ref": "#/$defs/CampusQuestionOutput"
+              },
+              "deterministic_findings": {
+                "$ref": "#/$defs/CampusQuestionFindings"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/SourceMetadata"
+                },
+                "maxItems": 20,
+                "title": "Sources",
+                "type": "array"
+              },
+              "warnings": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Warnings",
+                "type": "array"
+              },
+              "model": {
+                "$ref": "#/$defs/ModelMetadata"
+              },
+              "meta": {
+                "$ref": "#/$defs/ResultMetadata"
+              }
+            },
+            "required": [
+              "status",
+              "result",
+              "deterministic_findings",
+              "model",
+              "meta"
+            ],
+            "title": "CampusQuestionSuccessEnvelope",
+            "type": "object"
+          },
+          "ErrorEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "error",
+                "title": "Status",
+                "type": "string"
+              },
+              "code": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "code",
+              "message"
+            ],
+            "title": "ErrorEnvelope",
+            "type": "object"
+          },
+          "ModelMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "const": "hy3",
+                "title": "Provider",
+                "type": "string"
+              },
+              "model": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Model",
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "live",
+                  "fixture"
+                ],
+                "title": "Mode",
+                "type": "string"
+              },
+              "reasoning_effort": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Reasoning Effort",
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "mode",
+              "reasoning_effort"
+            ],
+            "title": "ModelMetadata",
+            "type": "object"
+          },
+          "ResultMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {
+                "const": "1",
+                "title": "Schema Version",
+                "type": "string"
+              },
+              "generated_at": {
+                "format": "date-time",
+                "title": "Generated At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema_version",
+              "generated_at"
+            ],
+            "title": "ResultMetadata",
+            "type": "object"
+          },
+          "SourceMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "source_id": {
+                "maxLength": 300,
+                "minLength": 1,
+                "title": "Source Id",
+                "type": "string"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Title",
+                "type": "string"
+              },
+              "path": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "title": "Path",
+                "type": "string"
+              },
+              "source_type": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Source Type",
+                "type": "string"
+              },
+              "official": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Official"
+              },
+              "effective_date": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective Date"
+              }
+            },
+            "required": [
+              "source_id",
+              "title",
+              "path",
+              "source_type"
+            ],
+            "title": "SourceMetadata",
+            "type": "object"
+          }
+        },
+        "discriminator": {
+          "mapping": {
+            "error": "#/$defs/ErrorEnvelope",
+            "ok": "#/$defs/CampusQuestionSuccessEnvelope"
+          },
+          "propertyName": "status"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/CampusQuestionSuccessEnvelope"
+          },
+          {
+            "$ref": "#/$defs/ErrorEnvelope"
+          }
+        ],
+        "type": "object"
+      }
+    },
+    "compare_competitions": {
+      "schema_sha256": "d81ee88aa6c5fe6a879982f722980878fb66c311f448aa45aea7a0f241b42f1f",
+      "input_schema": {
+        "$defs": {
+          "CompetitionCandidate": {
+            "additionalProperties": false,
+            "description": "自定义赛事对象，第一版仅接受必要的可解释属性。",
+            "properties": {
+              "name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Name",
+                "type": "string"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "recognition_note": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Recognition Note"
+              },
+              "difficulty": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Difficulty"
+              },
+              "recommended_weekly_hours": {
+                "anyOf": [
+                  {
+                    "maximum": 40,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Recommended Weekly Hours"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "title": "CompetitionCandidate",
+            "type": "object"
+          },
+          "StudentProfile": {
+            "additionalProperties": false,
+            "description": "仅包含用于适配评估的最小学生画像。",
+            "properties": {
+              "major": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Major",
+                "type": "string"
+              },
+              "grade": {
+                "maxLength": 40,
+                "minLength": 1,
+                "title": "Grade",
+                "type": "string"
+              },
+              "weekly_hours": {
+                "maximum": 80,
+                "minimum": 0,
+                "title": "Weekly Hours",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "major",
+              "grade",
+              "weekly_hours"
+            ],
+            "title": "StudentProfile",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "要求目录名模式和自定义对象模式二选一。",
+        "properties": {
+          "competition_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Competition Names"
+          },
+          "competitions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/CompetitionCandidate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Competitions"
+          },
+          "student_profile": {
+            "$ref": "#/$defs/StudentProfile"
+          }
+        },
+        "required": [
+          "student_profile"
+        ],
+        "title": "CompetitionCompareInput",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "CompetitionAlignment": {
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "title": "Level",
+                "type": "string"
+              },
+              "matched_categories": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Matched Categories",
+                "type": "array"
+              }
+            },
+            "required": [
+              "level"
+            ],
+            "title": "CompetitionAlignment",
+            "type": "object"
+          },
+          "CompetitionComparison": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Name",
+                "type": "string"
+              },
+              "school_recognition": {
+                "$ref": "#/$defs/CompetitionRecognition"
+              },
+              "human_evaluation": {
+                "$ref": "#/$defs/CompetitionHumanEvaluation"
+              },
+              "student_fit": {
+                "$ref": "#/$defs/CompetitionStudentFit"
+              },
+              "evidence_quality": {
+                "$ref": "#/$defs/CompetitionEvidenceQuality"
+              }
+            },
+            "required": [
+              "name",
+              "school_recognition",
+              "human_evaluation",
+              "student_fit",
+              "evidence_quality"
+            ],
+            "title": "CompetitionComparison",
+            "type": "object"
+          },
+          "CompetitionEvidenceQuality": {
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Level",
+                "type": "string"
+              },
+              "source_type": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Source Type",
+                "type": "string"
+              },
+              "official": {
+                "title": "Official",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "level",
+              "source_type",
+              "official"
+            ],
+            "title": "CompetitionEvidenceQuality",
+            "type": "object"
+          },
+          "CompetitionFindings": {
+            "additionalProperties": false,
+            "properties": {
+              "comparisons": {
+                "items": {
+                  "$ref": "#/$defs/CompetitionComparison"
+                },
+                "maxItems": 5,
+                "minItems": 2,
+                "title": "Comparisons",
+                "type": "array"
+              }
+            },
+            "required": [
+              "comparisons"
+            ],
+            "title": "CompetitionFindings",
+            "type": "object"
+          },
+          "CompetitionHumanEvaluation": {
+            "additionalProperties": false,
+            "properties": {
+              "difficulty": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Difficulty",
+                "type": "string"
+              },
+              "teamwork": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Teamwork",
+                "type": "string"
+              },
+              "portfolio_value": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Portfolio Value",
+                "type": "string"
+              },
+              "note": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Note",
+                "type": "string"
+              }
+            },
+            "required": [
+              "difficulty",
+              "teamwork",
+              "portfolio_value",
+              "note"
+            ],
+            "title": "CompetitionHumanEvaluation",
+            "type": "object"
+          },
+          "CompetitionOutput": {
+            "additionalProperties": false,
+            "description": "赛事比较结果对应的叙事内容。",
+            "properties": {
+              "recommendation": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Recommendation",
+                "type": "string"
+              },
+              "rationale": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Rationale",
+                "type": "string"
+              },
+              "considerations": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Considerations",
+                "type": "array"
+              }
+            },
+            "required": [
+              "recommendation",
+              "rationale"
+            ],
+            "title": "CompetitionOutput",
+            "type": "object"
+          },
+          "CompetitionRecognition": {
+            "additionalProperties": false,
+            "properties": {
+              "recognized": {
+                "title": "Recognized",
+                "type": "boolean"
+              },
+              "level": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Level",
+                "type": "string"
+              },
+              "note": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Note",
+                "type": "string"
+              }
+            },
+            "required": [
+              "recognized",
+              "level",
+              "note"
+            ],
+            "title": "CompetitionRecognition",
+            "type": "object"
+          },
+          "CompetitionStudentFit": {
+            "additionalProperties": false,
+            "properties": {
+              "major_alignment": {
+                "$ref": "#/$defs/CompetitionAlignment"
+              },
+              "time_alignment": {
+                "$ref": "#/$defs/CompetitionTimeAlignment"
+              }
+            },
+            "required": [
+              "major_alignment",
+              "time_alignment"
+            ],
+            "title": "CompetitionStudentFit",
+            "type": "object"
+          },
+          "CompetitionSuccessEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "ok",
+                "title": "Status",
+                "type": "string"
+              },
+              "result": {
+                "$ref": "#/$defs/CompetitionOutput"
+              },
+              "deterministic_findings": {
+                "$ref": "#/$defs/CompetitionFindings"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/SourceMetadata"
+                },
+                "maxItems": 20,
+                "title": "Sources",
+                "type": "array"
+              },
+              "warnings": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Warnings",
+                "type": "array"
+              },
+              "model": {
+                "$ref": "#/$defs/ModelMetadata"
+              },
+              "meta": {
+                "$ref": "#/$defs/ResultMetadata"
+              }
+            },
+            "required": [
+              "status",
+              "result",
+              "deterministic_findings",
+              "model",
+              "meta"
+            ],
+            "title": "CompetitionSuccessEnvelope",
+            "type": "object"
+          },
+          "CompetitionTimeAlignment": {
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "title": "Level",
+                "type": "string"
+              },
+              "available_weekly_hours": {
+                "maximum": 80,
+                "minimum": 0,
+                "title": "Available Weekly Hours",
+                "type": "integer"
+              },
+              "recommended_weekly_hours": {
+                "maximum": 40,
+                "minimum": 1,
+                "title": "Recommended Weekly Hours",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "level",
+              "available_weekly_hours",
+              "recommended_weekly_hours"
+            ],
+            "title": "CompetitionTimeAlignment",
+            "type": "object"
+          },
+          "ErrorEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "error",
+                "title": "Status",
+                "type": "string"
+              },
+              "code": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "code",
+              "message"
+            ],
+            "title": "ErrorEnvelope",
+            "type": "object"
+          },
+          "ModelMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "const": "hy3",
+                "title": "Provider",
+                "type": "string"
+              },
+              "model": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Model",
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "live",
+                  "fixture"
+                ],
+                "title": "Mode",
+                "type": "string"
+              },
+              "reasoning_effort": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Reasoning Effort",
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "mode",
+              "reasoning_effort"
+            ],
+            "title": "ModelMetadata",
+            "type": "object"
+          },
+          "ResultMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {
+                "const": "1",
+                "title": "Schema Version",
+                "type": "string"
+              },
+              "generated_at": {
+                "format": "date-time",
+                "title": "Generated At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema_version",
+              "generated_at"
+            ],
+            "title": "ResultMetadata",
+            "type": "object"
+          },
+          "SourceMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "source_id": {
+                "maxLength": 300,
+                "minLength": 1,
+                "title": "Source Id",
+                "type": "string"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Title",
+                "type": "string"
+              },
+              "path": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "title": "Path",
+                "type": "string"
+              },
+              "source_type": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Source Type",
+                "type": "string"
+              },
+              "official": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Official"
+              },
+              "effective_date": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective Date"
+              }
+            },
+            "required": [
+              "source_id",
+              "title",
+              "path",
+              "source_type"
+            ],
+            "title": "SourceMetadata",
+            "type": "object"
+          }
+        },
+        "discriminator": {
+          "mapping": {
+            "error": "#/$defs/ErrorEnvelope",
+            "ok": "#/$defs/CompetitionSuccessEnvelope"
+          },
+          "propertyName": "status"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/CompetitionSuccessEnvelope"
+          },
+          {
+            "$ref": "#/$defs/ErrorEnvelope"
+          }
+        ],
+        "type": "object"
+      }
+    },
+    "plan_student_week": {
+      "schema_sha256": "4916c924e00f5e72d4bda9dfba0dc648ad15cff6b45f16fe5b715ada3684cb94",
+      "input_schema": {
+        "$defs": {
+          "FixedEvent": {
+            "additionalProperties": false,
+            "description": "不允许被计划任务占用的固定日程。",
+            "properties": {
+              "title": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Title",
+                "type": "string"
+              },
+              "weekday": {
+                "maximum": 7,
+                "minimum": 1,
+                "title": "Weekday",
+                "type": "integer"
+              },
+              "start": {
+                "title": "Start",
+                "type": "string"
+              },
+              "end": {
+                "title": "End",
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "weekday",
+              "start",
+              "end"
+            ],
+            "title": "FixedEvent",
+            "type": "object"
+          },
+          "ScheduleConstraints": {
+            "additionalProperties": false,
+            "description": "局部计划器必须同时满足的硬约束。",
+            "properties": {
+              "minimum_block_minutes": {
+                "default": 30,
+                "maximum": 240,
+                "minimum": 15,
+                "title": "Minimum Block Minutes",
+                "type": "integer"
+              },
+              "daily_max_minutes": {
+                "default": 240,
+                "maximum": 1000,
+                "minimum": 15,
+                "title": "Daily Max Minutes",
+                "type": "integer"
+              },
+              "sleep_start": {
+                "default": "23:30",
+                "title": "Sleep Start",
+                "type": "string"
+              },
+              "sleep_end": {
+                "default": "07:00",
+                "title": "Sleep End",
+                "type": "string"
+              }
+            },
+            "title": "ScheduleConstraints",
+            "type": "object"
+          },
+          "WeeklyGoal": {
+            "additionalProperties": false,
+            "description": "需要在当前周内安排的目标及优先级。",
+            "properties": {
+              "name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Name",
+                "type": "string"
+              },
+              "weekly_minutes": {
+                "maximum": 10080,
+                "minimum": 1,
+                "title": "Weekly Minutes",
+                "type": "integer"
+              },
+              "priority": {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "title": "Priority",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "weekly_minutes",
+              "priority"
+            ],
+            "title": "WeeklyGoal",
+            "type": "object"
+          },
+          "WeeklySchedule": {
+            "additionalProperties": false,
+            "description": "一周固定课表及其本地时区。",
+            "properties": {
+              "week_start": {
+                "format": "date",
+                "title": "Week Start",
+                "type": "string"
+              },
+              "timezone": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Timezone",
+                "type": "string"
+              },
+              "fixed_events": {
+                "items": {
+                  "$ref": "#/$defs/FixedEvent"
+                },
+                "maxItems": 200,
+                "title": "Fixed Events",
+                "type": "array"
+              }
+            },
+            "required": [
+              "week_start",
+              "timezone"
+            ],
+            "title": "WeeklySchedule",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "要求内联课表和相对路径课表二选一。",
+        "properties": {
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WeeklySchedule"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "schedule_path": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Schedule Path"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/$defs/WeeklyGoal"
+            },
+            "maxItems": 50,
+            "title": "Goals",
+            "type": "array"
+          },
+          "constraints": {
+            "$ref": "#/$defs/ScheduleConstraints"
+          }
+        },
+        "title": "PlanStudentWeekInput",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ErrorEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "error",
+                "title": "Status",
+                "type": "string"
+              },
+              "code": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "code",
+              "message"
+            ],
+            "title": "ErrorEnvelope",
+            "type": "object"
+          },
+          "ModelMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "const": "hy3",
+                "title": "Provider",
+                "type": "string"
+              },
+              "model": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Model",
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "live",
+                  "fixture"
+                ],
+                "title": "Mode",
+                "type": "string"
+              },
+              "reasoning_effort": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Reasoning Effort",
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "mode",
+              "reasoning_effort"
+            ],
+            "title": "ModelMetadata",
+            "type": "object"
+          },
+          "PlanItem": {
+            "additionalProperties": false,
+            "properties": {
+              "goal": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Goal",
+                "type": "string"
+              },
+              "priority": {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "title": "Priority",
+                "type": "string"
+              },
+              "weekday": {
+                "maximum": 7,
+                "minimum": 1,
+                "title": "Weekday",
+                "type": "integer"
+              },
+              "date": {
+                "maxLength": 10,
+                "minLength": 10,
+                "title": "Date",
+                "type": "string"
+              },
+              "start": {
+                "maxLength": 5,
+                "minLength": 5,
+                "title": "Start",
+                "type": "string"
+              },
+              "end": {
+                "maxLength": 5,
+                "minLength": 5,
+                "title": "End",
+                "type": "string"
+              },
+              "minutes": {
+                "maximum": 1000,
+                "minimum": 15,
+                "title": "Minutes",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "goal",
+              "priority",
+              "weekday",
+              "date",
+              "start",
+              "end",
+              "minutes"
+            ],
+            "title": "PlanItem",
+            "type": "object"
+          },
+          "ResultMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {
+                "const": "1",
+                "title": "Schema Version",
+                "type": "string"
+              },
+              "generated_at": {
+                "format": "date-time",
+                "title": "Generated At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema_version",
+              "generated_at"
+            ],
+            "title": "ResultMetadata",
+            "type": "object"
+          },
+          "SourceMetadata": {
+            "additionalProperties": false,
+            "properties": {
+              "source_id": {
+                "maxLength": 300,
+                "minLength": 1,
+                "title": "Source Id",
+                "type": "string"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "title": "Title",
+                "type": "string"
+              },
+              "path": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "title": "Path",
+                "type": "string"
+              },
+              "source_type": {
+                "maxLength": 100,
+                "minLength": 1,
+                "title": "Source Type",
+                "type": "string"
+              },
+              "official": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Official"
+              },
+              "effective_date": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective Date"
+              }
+            },
+            "required": [
+              "source_id",
+              "title",
+              "path",
+              "source_type"
+            ],
+            "title": "SourceMetadata",
+            "type": "object"
+          },
+          "UnscheduledGoal": {
+            "additionalProperties": false,
+            "properties": {
+              "goal": {
+                "maxLength": 200,
+                "minLength": 1,
+                "title": "Goal",
+                "type": "string"
+              },
+              "minutes": {
+                "maximum": 10080,
+                "minimum": 1,
+                "title": "Minutes",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "goal",
+              "minutes"
+            ],
+            "title": "UnscheduledGoal",
+            "type": "object"
+          },
+          "WeekPlanFindings": {
+            "additionalProperties": false,
+            "properties": {
+              "plan": {
+                "items": {
+                  "$ref": "#/$defs/PlanItem"
+                },
+                "maxItems": 350,
+                "title": "Plan",
+                "type": "array"
+              },
+              "daily_assigned_minutes": {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "maxProperties": 7,
+                "minProperties": 7,
+                "title": "Daily Assigned Minutes",
+                "type": "object"
+              },
+              "total_requested_minutes": {
+                "maximum": 504000,
+                "minimum": 0,
+                "title": "Total Requested Minutes",
+                "type": "integer"
+              },
+              "total_available_minutes": {
+                "maximum": 10080,
+                "minimum": 0,
+                "title": "Total Available Minutes",
+                "type": "integer"
+              },
+              "total_scheduled_minutes": {
+                "maximum": 504000,
+                "minimum": 0,
+                "title": "Total Scheduled Minutes",
+                "type": "integer"
+              },
+              "unscheduled": {
+                "items": {
+                  "$ref": "#/$defs/UnscheduledGoal"
+                },
+                "maxItems": 50,
+                "title": "Unscheduled",
+                "type": "array"
+              }
+            },
+            "required": [
+              "daily_assigned_minutes",
+              "total_requested_minutes",
+              "total_available_minutes",
+              "total_scheduled_minutes"
+            ],
+            "title": "WeekPlanFindings",
+            "type": "object"
+          },
+          "WeeklyPlanOutput": {
+            "additionalProperties": false,
+            "description": "伴随本地校验周计划的叙事组织内容。",
+            "properties": {
+              "weekly_strategy": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Weekly Strategy",
+                "type": "string"
+              },
+              "priority_order": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Priority Order",
+                "type": "array"
+              },
+              "notes": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Notes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "weekly_strategy"
+            ],
+            "title": "WeeklyPlanOutput",
+            "type": "object"
+          },
+          "WeeklyPlanSuccessEnvelope": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "const": "ok",
+                "title": "Status",
+                "type": "string"
+              },
+              "result": {
+                "$ref": "#/$defs/WeeklyPlanOutput"
+              },
+              "deterministic_findings": {
+                "$ref": "#/$defs/WeekPlanFindings"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/SourceMetadata"
+                },
+                "maxItems": 20,
+                "title": "Sources",
+                "type": "array"
+              },
+              "warnings": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Warnings",
+                "type": "array"
+              },
+              "model": {
+                "$ref": "#/$defs/ModelMetadata"
+              },
+              "meta": {
+                "$ref": "#/$defs/ResultMetadata"
+              }
+            },
+            "required": [
+              "status",
+              "result",
+              "deterministic_findings",
+              "model",
+              "meta"
+            ],
+            "title": "WeeklyPlanSuccessEnvelope",
+            "type": "object"
+          }
+        },
+        "discriminator": {
+          "mapping": {
+            "error": "#/$defs/ErrorEnvelope",
+            "ok": "#/$defs/WeeklyPlanSuccessEnvelope"
+          },
+          "propertyName": "status"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/WeeklyPlanSuccessEnvelope"
+          },
+          {
+            "$ref": "#/$defs/ErrorEnvelope"
+          }
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

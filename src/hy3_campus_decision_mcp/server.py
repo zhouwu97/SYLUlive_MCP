@@ -1,20 +1,20 @@
-"""基于 FastMCP 的 stdio Server 组装。"""
+"""基于 MCP 公开 Server API 的 stdio 服务组装。"""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
-from typing import Any, Literal
+from typing import Any
 
-from mcp.server.fastmcp import FastMCP
-from pydantic import ConfigDict
+from mcp import types
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from pydantic import TypeAdapter
 
 from .config import Hy3Mode, Settings, load_settings
-from .constants import SERVER_NAME
-from .tools.analyze_academic_snapshot import analyze_academic_snapshot
-from .tools.answer_campus_question import answer_campus_question
-from .tools.compare_competitions import compare_competitions
-from .tools.plan_student_week import plan_student_week
+from .constants import PACKAGE_VERSION, SERVER_NAME, STATUS_TOOL_NAME
+from .contracts import TOOL_CONTRACTS, ToolContract
 from .tools.runtime import ToolRuntime
 from .tools.status import build_status
 
@@ -30,122 +30,74 @@ def configure_logging(level: str) -> None:
     )
 
 
-def _forbid_extra_tool_arguments(server: FastMCP, tool_name: str) -> None:
-    """收紧 FastMCP 生成的参数模型，避免协议层静默丢弃额外字段。"""
+def _status_tool() -> types.Tool:
+    """构造没有输入且具备显式对象 Schema 的状态工具定义。"""
 
-    # FastMCP 暂无覆写自动参数模型配置的公共接口；注册后必须收紧该模型，
-    # 否则协议层会忽略未知字段，破坏工具输入的 `extra="forbid"` 契约。
-    tool_manager = getattr(server, "_tool_manager", None)
-    if tool_manager is None:
-        raise RuntimeError("当前 FastMCP 版本未提供工具管理器")
-    tool = tool_manager.get_tool(tool_name)
-    if tool is None:
-        raise RuntimeError(f"工具未注册：{tool_name}")
-    argument_model = tool.fn_metadata.arg_model
-    model_config = dict(argument_model.model_config)
-    model_config["extra"] = "forbid"
-    argument_model.model_config = ConfigDict(**model_config)
-    argument_model.model_rebuild(force=True)
-    tool.parameters = argument_model.model_json_schema(by_alias=True)
-
-
-def build_server(settings: Settings) -> FastMCP:
-    """创建仅捕获安全进程依赖、可通过 stdio 运行的 Server。"""
-
-    server = FastMCP(
-        SERVER_NAME,
-        instructions="校园数据仅来自本地示例或显式配置的 Hy3，不连接生产系统。",
+    return types.Tool(
+        name=STATUS_TOOL_NAME,
+        description="查看安全的 MCP 运行状态和可用能力。",
+        inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
+        outputSchema={"type": "object"},
     )
+
+
+def _tool_definition(contract: ToolContract) -> types.Tool:
+    """从唯一注册表投影 MCP tools/list 定义，避免 SDK 私有字段改写。"""
+
+    return types.Tool(
+        name=contract.name,
+        description=contract.description,
+        inputSchema=contract.input_schema,
+        outputSchema=contract.output_schema,
+    )
+
+
+def build_server(settings: Settings) -> Server:
+    """创建显式列举和调用工具的 MCP Server。"""
+
+    server = Server(SERVER_NAME, version=PACKAGE_VERSION)
     runtime = ToolRuntime(settings)
-
-    @server.tool(name="hy3_campus_status", description="查看安全的 MCP 运行状态和可用能力。")
-    def hy3_campus_status() -> dict[str, object]:
-        return build_status(settings)
-
-    _forbid_extra_tool_arguments(server, "hy3_campus_status")
-
-    if settings.mode is Hy3Mode.DISABLED:
-        return server
-
-    @server.tool(
-        name="answer_campus_question",
-        description="基于本地校园文档回答问题，并返回可核验来源。",
+    active_contracts = (
+        TOOL_CONTRACTS if settings.mode is not Hy3Mode.DISABLED else {}
     )
-    async def campus_question_tool(
-        query: str,
-        category: Literal["policy", "academic", "competition", "general"] | None = None,
-        max_sources: int = 5,
-    ) -> dict[str, Any]:
-        return await answer_campus_question(
-            runtime,
-            {"query": query, "category": category, "max_sources": max_sources},
-        )
 
-    _forbid_extra_tool_arguments(server, "answer_campus_question")
+    @server.list_tools()
+    async def list_tools() -> list[types.Tool]:
+        definitions = [_status_tool()]
+        definitions.extend(_tool_definition(contract) for contract in active_contracts.values())
+        return definitions
 
-    @server.tool(
-        name="compare_competitions",
-        description="在学校认定、人工评价、学生适配和证据质量四维比较 2 至 5 项赛事。",
-    )
-    async def competition_comparison_tool(
-        student_profile: dict[str, Any],
-        competition_names: list[str] | None = None,
-        competitions: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
-        return await compare_competitions(
-            runtime,
-            {
-                "competition_names": competition_names,
-                "competitions": competitions,
-                "student_profile": student_profile,
-            },
-        )
-
-    _forbid_extra_tool_arguments(server, "compare_competitions")
-
-    @server.tool(
-        name="analyze_academic_snapshot",
-        description="分析非身份化学业快照，计算学分、挂科和数据完整度。",
-    )
-    async def academic_snapshot_tool(
-        snapshot: dict[str, Any] | None = None,
-        snapshot_path: str | None = None,
-    ) -> dict[str, Any]:
-        return await analyze_academic_snapshot(
-            runtime,
-            {"snapshot": snapshot, "snapshot_path": snapshot_path},
-        )
-
-    _forbid_extra_tool_arguments(server, "analyze_academic_snapshot")
-
-    @server.tool(
-        name="plan_student_week",
-        description="在固定事件、睡眠、最小时间块和每日上限内安排一周目标。",
-    )
-    async def student_week_plan_tool(
-        schedule: dict[str, Any] | None = None,
-        schedule_path: str | None = None,
-        goals: list[dict[str, Any]] | None = None,
-        constraints: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        return await plan_student_week(
-            runtime,
-            {
-                "schedule": schedule,
-                "schedule_path": schedule_path,
-                "goals": goals if goals is not None else [],
-                "constraints": constraints if constraints is not None else {},
-            },
-        )
-
-    _forbid_extra_tool_arguments(server, "plan_student_week")
+    @server.call_tool(validate_input=True)
+    async def call_registered_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if name == STATUS_TOOL_NAME:
+            return build_status(settings)
+        contract = active_contracts.get(name)
+        if contract is None:
+            raise ValueError(f"未知或当前模式不可用的工具：{name}")
+        # Pydantic 在业务入口再次验证，确保无论传输层如何调用都遵守同一严格契约。
+        request = contract.input_model.model_validate(arguments)
+        raw_result = await contract.handler(runtime, request.model_dump(mode="json"))
+        validated = TypeAdapter(contract.output_model).validate_python(raw_result)
+        return TypeAdapter(contract.output_model).dump_python(validated, mode="json")
 
     return server
 
 
+async def serve(settings: Settings) -> None:
+    """启动 stdio 事件循环，普通日志绝不写入协议输出。"""
+
+    server = build_server(settings)
+    async with stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            server.create_initialization_options(),
+        )
+
+
 def main() -> None:
-    """启动 MCP stdio 循环，禁止向 stdout 写入普通文本。"""
+    """加载配置并运行 MCP stdio 服务。"""
 
     settings = load_settings()
     configure_logging(settings.log_level)
-    build_server(settings).run(transport="stdio")
+    asyncio.run(serve(settings))

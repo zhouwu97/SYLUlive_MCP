@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from ..config import Hy3Mode, Settings
-from ..constants import CORE_TOOL_NAMES, PACKAGE_VERSION, STATUS_TOOL_NAME
+from ..constants import CORE_TOOL_NAMES, MCP_CONTRACT_VERSION, PACKAGE_VERSION, STATUS_TOOL_NAME
+from ..contracts import TOOL_CONTRACTS
 
 
 def build_status(settings: Settings) -> dict[str, object]:
@@ -17,11 +18,17 @@ def build_status(settings: Settings) -> dict[str, object]:
 
     return {
         "service_version": PACKAGE_VERSION,
+        "contract_version": MCP_CONTRACT_VERSION,
         "mode": settings.mode.value,
         "model": settings.model_name,
         "api_key_configured": settings.has_api_key,
         "workspace": workspace_identifier,
         "available_tools": available_tools,
+        "tool_contracts": {
+            name: {"schema_sha256": TOOL_CONTRACTS[name].schema_sha256}
+            for name in CORE_TOOL_NAMES
+            if core_tools_available
+        },
         "available_data_sources": {
             "campus_documents": "campus_documents",
             "competition_catalog": "competitions/catalog.json",

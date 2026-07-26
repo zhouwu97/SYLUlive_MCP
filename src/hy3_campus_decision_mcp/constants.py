@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 PACKAGE_VERSION = "0.1.0"
-SCHEMA_VERSION = "1"
+RESULT_SCHEMA_VERSION = "1"
+MCP_CONTRACT_VERSION = "sylulive-hy3/1"
 SERVER_NAME = "Hy3 Campus Decision Copilot"
 ALLOWED_SOURCE_EXTENSIONS = frozenset({".md", ".txt", ".json", ".jsonl", ".csv"})
 CORE_TOOL_NAMES = (

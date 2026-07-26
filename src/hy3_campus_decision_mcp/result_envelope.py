@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from .config import Settings
-from .constants import SCHEMA_VERSION
+from .constants import RESULT_SCHEMA_VERSION
 from .errors import CampusMcpError
 
 
@@ -34,7 +34,7 @@ def ok_envelope(
             "reasoning_effort": reasoning_effort,
         },
         "meta": {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": RESULT_SCHEMA_VERSION,
             "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         },
     }
