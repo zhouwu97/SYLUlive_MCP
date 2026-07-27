@@ -4,7 +4,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb5a77ec28850116d9c157f",
+        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@8bc6d4f753eda4a18e0bc1bb631f107bd0b4d01d",
         "hy3-campus-decision-mcp"
       ],
       "env": {

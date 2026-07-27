@@ -21,13 +21,13 @@
 安装并查看版本，不需要克隆仓库或填写绝对路径：
 
 ```powershell
-uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb5a77ec28850116d9c157f" hy3-campus-decision-mcp --version
+uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@8bc6d4f753eda4a18e0bc1bb631f107bd0b4d01d" hy3-campus-decision-mcp --version
 ```
 
 启动真实 MCP 子进程，完成 `initialize`、`tools/list` 和四个核心工具调用：
 
 ```powershell
-uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb5a77ec28850116d9c157f" hy3-campus-decision-mcp --selfcheck
+uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@8bc6d4f753eda4a18e0bc1bb631f107bd0b4d01d" hy3-campus-decision-mcp --selfcheck
 ```
 
 自检使用随 wheel 分发的公开 Fixture，不需要 API Key。正式 Live 模式通过环境变量提供 Hy3 OpenAI-compatible 端点和密钥，代码及客户端配置中不保存凭据。
@@ -99,7 +99,7 @@ uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb5a77ec28850116d9c157f",
+        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@8bc6d4f753eda4a18e0bc1bb631f107bd0b4d01d",
         "hy3-campus-decision-mcp"
       ],
       "env": {"HY3_MODE": "fixture"}
