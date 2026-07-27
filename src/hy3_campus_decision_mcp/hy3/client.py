@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from collections.abc import Iterable
@@ -90,7 +91,7 @@ class Hy3Client:
         output_model: type[OutputModelT],
         allowed_source_ids: Iterable[str],
     ) -> OutputModelT:
-        """调用端点，并在结构化返回不合格时仅重试一次。"""
+        """调用端点，并按传输错误或输出错误的类型最多重试一次。"""
 
         if not self._settings.has_api_key:
             raise Hy3ConfigurationError(
@@ -103,11 +104,21 @@ class Hy3Client:
         )
         request_messages = _messages_with_output_schema(messages, output_model)
         for attempt in range(2):
-            raw_content = await self._post_completion(
-                endpoint=endpoint,
-                messages=request_messages,
-                reasoning_effort=reasoning_effort,
-            )
+            try:
+                raw_content = await self._post_completion(
+                    endpoint=endpoint,
+                    messages=request_messages,
+                    reasoning_effort=reasoning_effort,
+                )
+            except Hy3ProviderError as error:
+                if attempt == 1 or error.code not in {
+                    "hy3_rate_limited",
+                    "hy3_server_error",
+                    "hy3_connection_failed",
+                }:
+                    raise
+                await asyncio.sleep(0.05 * (attempt + 1))
+                continue
             try:
                 raw_output = _decode_provider_output(raw_content)
                 return validate_provider_output(
@@ -179,15 +190,45 @@ class Hy3Client:
                     "hy3_redirect_rejected",
                     "Hy3 endpoint returned a redirect, which is not allowed.",
                 )
+            if response.status_code in {401, 403}:
+                raise Hy3ProviderError(
+                    "hy3_auth_failed",
+                    "Hy3 rejected the configured credentials.",
+                )
+            if response.status_code == 429:
+                raise Hy3ProviderError(
+                    "hy3_rate_limited",
+                    "Hy3 rate limited the request.",
+                )
+            if response.status_code >= 500:
+                raise Hy3ProviderError(
+                    "hy3_server_error",
+                    "Hy3 returned a server error.",
+                )
             response.raise_for_status()
             decoded = response.json()
             content = decoded["choices"][0]["message"]["content"]
         except Hy3ProviderError:
             raise
-        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as error:
+        except httpx.TimeoutException as error:
+            raise Hy3ProviderError(
+                "hy3_timeout",
+                "Hy3 request timed out.",
+            ) from error
+        except httpx.NetworkError as error:
+            raise Hy3ProviderError(
+                "hy3_connection_failed",
+                "Hy3 connection failed.",
+            ) from error
+        except httpx.HTTPStatusError as error:
             raise Hy3ProviderError(
                 "hy3_request_failed",
-                "Hy3 request failed or returned an unsupported response.",
+                "Hy3 rejected the request.",
+            ) from error
+        except (KeyError, IndexError, TypeError, ValueError) as error:
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 returned an unsupported response envelope.",
             ) from error
 
         if not isinstance(content, str):

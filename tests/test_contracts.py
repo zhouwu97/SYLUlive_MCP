@@ -63,3 +63,7 @@ def test_status_declares_current_core_contract_hashes(tmp_path) -> None:
     assert status["tool_contracts"] == {
         name: {"schema_sha256": contract.schema_sha256} for name, contract in TOOL_CONTRACTS.items()
     }
+    assert status["policy_bundle_loaded"] is False
+    assert status["policy_bundle_version"] is None
+    assert status["policy_bundle_sha256"] is None
+    assert status["intent_contract_loaded"] is False

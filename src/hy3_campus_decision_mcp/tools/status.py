@@ -5,6 +5,7 @@ from __future__ import annotations
 from ..config import Hy3Mode, Settings
 from ..constants import CORE_TOOL_NAMES, MCP_CONTRACT_VERSION, PACKAGE_VERSION, STATUS_TOOL_NAME
 from ..contracts import TOOL_CONTRACTS
+from ..data_sources import inspect_policy_bundle
 
 
 def build_status(settings: Settings) -> dict[str, object]:
@@ -35,6 +36,7 @@ def build_status(settings: Settings) -> dict[str, object]:
             "academic_examples": "academic",
             "schedule_examples": "schedules",
         },
+        **inspect_policy_bundle(settings.campus_root_path),
         "security": {
             "relative_paths_only": True,
             "sensitive_fields_rejected": True,

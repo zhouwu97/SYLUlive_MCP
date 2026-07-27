@@ -24,7 +24,7 @@ def validate_provider_output(
         parsed = output_model.model_validate(raw_output)
     except ValidationError as error:
         raise Hy3ProviderError(
-            "hy3_output_invalid",
+            "hy3_schema_invalid",
             "Hy3 returned an invalid structured response.",
         ) from error
 

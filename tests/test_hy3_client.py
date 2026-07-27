@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 import httpx
 import pytest
@@ -205,3 +206,158 @@ async def test_live_request_rejects_unknown_single_key_wrapper() -> None:
         )
 
     assert request_count == 2
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected_code", "expected_requests"),
+    [
+        (401, "hy3_auth_failed", 1),
+        (403, "hy3_auth_failed", 1),
+        (429, "hy3_rate_limited", 2),
+        (500, "hy3_server_error", 2),
+    ],
+)
+async def test_live_request_classifies_http_failures_and_retries_only_transient_errors(
+    status_code: int,
+    expected_code: str,
+    expected_requests: int,
+) -> None:
+    """认证错误立即失败，限流和服务端错误最多退避重试一次。"""
+
+    request_count = 0
+
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal request_count
+        request_count += 1
+        return httpx.Response(status_code)
+
+    client = Hy3Client(
+        Settings(mode=Hy3Mode.LIVE, api_base="https://hy3.example/v1", api_key="test-key"),
+        http_transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(Hy3ProviderError) as captured:
+        await client.generate_structured(
+            tool_name="answer_campus_question",
+            messages=[{"role": "user", "content": "请回答。"}],
+            output_model=CampusQuestionOutput,
+            reasoning_effort="low",
+        )
+
+    assert captured.value.code == expected_code
+    assert request_count == expected_requests
+
+
+async def test_live_request_does_not_add_schema_repair_prompt_for_transport_retry() -> None:
+    """网络类重试必须复用原请求，不能错误追加 Schema 修复提示。"""
+
+    requests: list[dict[str, object]] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(json.loads(request.content))
+        if len(requests) == 1:
+            return httpx.Response(500)
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "answer": "已恢复。",
+                                    "rationale": "第二次请求成功。",
+                                    "source_ids": [],
+                                    "missing_information": [],
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            },
+        )
+
+    client = Hy3Client(
+        Settings(mode=Hy3Mode.LIVE, api_base="https://hy3.example/v1", api_key="test-key"),
+        http_transport=httpx.MockTransport(handler),
+    )
+    await client.generate_structured(
+        tool_name="answer_campus_question",
+        messages=[{"role": "user", "content": "请回答。"}],
+        output_model=CampusQuestionOutput,
+        reasoning_effort="low",
+    )
+
+    assert len(requests) == 2
+    assert requests[0]["messages"] == requests[1]["messages"]
+
+
+@pytest.mark.parametrize(
+    ("error_factory", "expected_code", "expected_requests"),
+    [
+        (
+            lambda request: httpx.ReadTimeout("timed out", request=request),
+            "hy3_timeout",
+            1,
+        ),
+        (
+            lambda request: httpx.ConnectError("connection failed", request=request),
+            "hy3_connection_failed",
+            2,
+        ),
+    ],
+)
+async def test_live_request_classifies_transport_failures(
+    error_factory: Callable[[httpx.Request], httpx.RequestError],
+    expected_code: str,
+    expected_requests: int,
+) -> None:
+    """超时立即失败，连接中断最多退避重试一次。"""
+
+    request_count = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal request_count
+        request_count += 1
+        raise error_factory(request)
+
+    client = Hy3Client(
+        Settings(mode=Hy3Mode.LIVE, api_base="https://hy3.example/v1", api_key="test-key"),
+        http_transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(Hy3ProviderError) as captured:
+        await client.generate_structured(
+            tool_name="answer_campus_question",
+            messages=[{"role": "user", "content": "请回答。"}],
+            output_model=CampusQuestionOutput,
+            reasoning_effort="low",
+        )
+
+    assert captured.value.code == expected_code
+    assert request_count == expected_requests
+
+
+async def test_live_request_reports_schema_validation_separately() -> None:
+    """合法 JSON 但不符合输出模型时返回独立的 Schema 错误码。"""
+
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": '{"answer":"缺字段"}'}}]},
+        )
+
+    client = Hy3Client(
+        Settings(mode=Hy3Mode.LIVE, api_base="https://hy3.example/v1", api_key="test-key"),
+        http_transport=httpx.MockTransport(handler),
+    )
+    with pytest.raises(Hy3ProviderError) as captured:
+        await client.generate_structured(
+            tool_name="answer_campus_question",
+            messages=[{"role": "user", "content": "请回答。"}],
+            output_model=CampusQuestionOutput,
+            reasoning_effort="low",
+        )
+
+    assert captured.value.code == "hy3_schema_invalid"

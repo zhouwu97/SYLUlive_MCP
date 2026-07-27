@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from pathlib import Path
 from typing import Any
 
 from ..constants import ALLOWED_SOURCE_EXTENSIONS
+from ..errors import CampusMcpError
 from ..safety.path_policy import WorkspacePathPolicy
+from .policy_bundle import (
+    POLICY_BUNDLE_FILE,
+    POLICY_CONTRACT_FILE,
+    inspect_policy_bundle,
+)
 from .source_models import CampusDocument
 
 
@@ -74,9 +79,16 @@ class CampusDocumentRepository:
     def __init__(self, path_policy: WorkspacePathPolicy, *, max_files: int) -> None:
         self._path_policy = path_policy
         self._max_files = max_files
-        self._contract = self._load_contract()
+        self._policy_bundle_error: CampusMcpError | None = None
+        try:
+            self._contract = self._load_contract()
+        except CampusMcpError as error:
+            self._contract = {"aliases": [], "intents": []}
+            self._policy_bundle_error = error
 
     def search(self, query: str, *, category: str | None, max_sources: int) -> list[CampusDocument]:
+        if category == "policy" and self._policy_bundle_error is not None:
+            raise self._policy_bundle_error
         plan = self._query_plan(query)
         query_terms = _terms(query + " " + " ".join(plan["terms"]))
         candidates: list[tuple[int, CampusDocument]] = []
@@ -137,53 +149,75 @@ class CampusDocumentRepository:
         return score
 
     def _query_plan(self, query: str) -> dict[str, Any]:
-        intent = self._detect_intent(query)
-        profile = next(
-            (item for item in self._contract.get("intents", []) if item["intent"] == intent), {}
-        )
-        terms = list(profile.get("canonical_terms", []))
+        intents = self._detect_intents(query)
+        profiles = [
+            item
+            for intent in intents
+            for item in self._contract.get("intents", [])
+            if item["intent"] == intent
+        ]
+        terms = [term for profile in profiles for term in profile.get("canonical_terms", [])]
         for alias in self._contract.get("aliases", []):
             if alias["trigger"] in query:
                 terms.extend([alias["trigger"], *alias.get("terms", [])])
+        preferred_types = list(
+            dict.fromkeys(
+                document_type
+                for profile in profiles
+                for document_type in profile.get("preferred_document_types", [])
+            )
+        )
+        required_groups = [
+            group for profile in profiles for group in profile.get("required_document_groups", [])
+        ]
         return {
-            "intent": intent,
+            "intent": intents[0],
             "terms": list(dict.fromkeys(terms)),
-            "preferred_types": profile.get("preferred_document_types", []),
-            "required_groups": profile.get("required_document_groups", []),
+            "preferred_types": preferred_types,
+            "required_groups": required_groups,
         }
 
-    @staticmethod
-    def _detect_intent(query: str) -> str:
-        if "挂科" in query and (
-            "怎么办" in query or "还是" in query or ("补考" in query and "重修" in query)
-        ):
-            return "failed_course_flow"
-        if "奖学金" in query:
-            return "scholarship_selection"
-        if "勤工助学" in query or "勤工俭学" in query:
-            return "work_study"
-        if "助学贷款" in query:
-            return "student_loan"
-        if any(term in query for term in ("困难认定", "助学金", "临时困难补助")):
-            return "hardship_aid"
-        if any(term in query for term in ("没钱", "交不起学费", "生活费不够")):
-            return "financial_difficulty_flow"
+    def _detect_intents(self, query: str) -> list[str]:
+        """按共享契约优先级选择主意图，并保留重修费用困难的双证据需求。"""
+
+        alias_intents = {
+            alias["intent"]
+            for alias in self._contract.get("aliases", [])
+            if alias.get("trigger") and alias["trigger"] in query
+        }
+        priorities = self._contract.get("intent_priority", [])
+        primary = next((intent for intent in priorities if intent in alias_intents), None)
+        if primary is not None:
+            return [primary]
+
+        if "重修" in query and any(term in query for term in ("交不起", "没钱", "费用困难")):
+            return ["retake", "financial_difficulty_flow"]
         if "补考" in query and any(term in query for term in ("没过", "不及格", "未通过")):
-            return "retake_transition"
+            return ["retake_transition"]
+        if (
+            "重修" in query
+            and any(term in query for term in ("补考", "二考"))
+            and any(term in query for term in ("挂科", "不及格", "没拿到学分"))
+        ):
+            return ["failed_course_flow"]
         if "重修" in query:
-            return "retake"
+            return ["retake"]
         if "补考" in query or "二考" in query:
-            return "second_exam"
+            return ["second_exam"]
         if any(term in query for term in ("挂科", "不及格", "没拿到学分")):
-            return "failed_course_flow"
-        return "general_policy"
+            return ["failed_course_flow"]
+        return ["general_policy"]
 
     def _load_contract(self) -> dict[str, Any]:
-        path = self._path_policy.root / "policy_bundle" / "policy_query_contract_v0.8.json"
+        root = self._path_policy.root / "policy_bundle"
+        if not root.exists():
+            return {"aliases": [], "intents": []}
+        inspect_policy_bundle(self._path_policy.root, strict=True)
+        path = root / POLICY_CONTRACT_FILE
         try:
             return json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            return {"aliases": [], "intents": []}
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise AssertionError("validated policy contract could not be loaded") from error
 
     def _load_documents(self) -> list[CampusDocument]:
         return [*self._load_markdown_documents(), *self._load_bundle_documents()]
@@ -211,20 +245,11 @@ class CampusDocumentRepository:
 
     def _load_bundle_documents(self) -> list[CampusDocument]:
         root = self._path_policy.root / "policy_bundle"
-        bundle, manifest_path = (
-            root / "sylulive-policy-bundle-v0.8.jsonl",
-            root / "policy-bundle-manifest.json",
-        )
-        try:
-            raw = bundle.read_bytes()
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            contract_raw = (root / "policy_query_contract_v0.8.json").read_bytes()
-            if hashlib.sha256(raw).hexdigest() != manifest["documents_sha256"]:
-                return []
-            if hashlib.sha256(contract_raw).hexdigest() != manifest["intent_contract_sha256"]:
-                return []
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError):
+        if not root.exists():
             return []
+        inspect_policy_bundle(self._path_policy.root, strict=True)
+        bundle = root / POLICY_BUNDLE_FILE
+        raw = bundle.read_bytes()
         documents: list[CampusDocument] = []
         for line_number, line in enumerate(raw.decode("utf-8").splitlines(), 1):
             try:

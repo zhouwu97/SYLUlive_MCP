@@ -2,5 +2,10 @@
 
 from .campus_documents import CampusDocumentRepository
 from .competition_catalog import CompetitionCatalogRepository
+from .policy_bundle import inspect_policy_bundle
 
-__all__ = ["CampusDocumentRepository", "CompetitionCatalogRepository"]
+__all__ = [
+    "CampusDocumentRepository",
+    "CompetitionCatalogRepository",
+    "inspect_policy_bundle",
+]
