@@ -3,9 +3,9 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hy3-campus-decision-mcp"
-version = "0.1.0"
-description = "基于 Hy3 的校园学业、竞赛与时间决策 MCP Server"
+name = "sylulive-mcp"
+version = "0.2.0"
+description = "面向 SYLUlive Agent 的纯工具型 MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -15,11 +15,13 @@ dependencies = [
   "mcp==1.28.1",
   "pydantic>=2.10,<3",
   "pydantic-settings>=2.7,<3",
+  "starlette>=0.47,<1",
   "tzdata>=2025.1",
+  "uvicorn>=0.35,<1",
 ]
 
 [project.scripts]
-hy3-campus-decision-mcp = "hy3_campus_decision_mcp.__main__:main"
+sylulive-mcp = "sylulive_mcp.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -29,7 +31,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hy3_campus_decision_mcp"]
+packages = ["src/sylulive_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

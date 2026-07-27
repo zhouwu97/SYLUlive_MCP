@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 
-from hy3_campus_decision_mcp.contracts import build_contract_manifest, committed_manifest_path
+from sylulive_mcp.contracts import build_contract_manifest, committed_manifest_path
 
 
 def main() -> None:
-    """将模型实时导出的规范化前 Schema 提交为跨仓库契约。"""
+    """将运行时代码生成的 Schema 提交为跨仓库契约。"""
 
     target = committed_manifest_path()
     target.parent.mkdir(parents=True, exist_ok=True)
