@@ -1,17 +1,14 @@
 {
   "mcpServers": {
     "hy3-campus-decision": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "--directory",
-        "/ABSOLUTE/PATH/TO/SYLUlive_MCP",
-        "run",
+        "--from",
+        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@rhinobird/hy3-campus-copilot",
         "hy3-campus-decision-mcp"
       ],
       "env": {
-        "HY3_MODE": "fixture",
-        "HY3_CAMPUS_ROOT": "./examples",
-        "HY3_FIXTURE_ROOT": "./tests/fixtures/hy3"
+        "HY3_MODE": "fixture"
       }
     }
   }

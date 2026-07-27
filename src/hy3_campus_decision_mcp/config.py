@@ -9,6 +9,22 @@ from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def default_campus_root() -> Path:
+    """返回可随 wheel 分发的演示校园资料目录。"""
+
+    package_root = Path(__file__).resolve().parent
+    packaged = package_root / "resources" / "examples"
+    return packaged if packaged.exists() else package_root.parents[1] / "examples"
+
+
+def default_fixture_root() -> Path:
+    """返回可随 wheel 分发的 Hy3 固定响应目录。"""
+
+    package_root = Path(__file__).resolve().parent
+    packaged = package_root / "resources" / "fixtures" / "hy3"
+    return packaged if packaged.exists() else package_root.parents[1] / "tests" / "fixtures" / "hy3"
+
+
 class Hy3Mode(StrEnum):
     """支持的模型提供方运行模式。"""
 
@@ -50,11 +66,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("HY3_TIMEOUT_SECONDS", "timeout_seconds"),
     )
     campus_root: Path = Field(
-        default=Path("examples"),
+        default_factory=default_campus_root,
         validation_alias=AliasChoices("HY3_CAMPUS_ROOT", "campus_root"),
     )
     fixture_root: Path = Field(
-        default=Path("tests/fixtures/hy3"),
+        default_factory=default_fixture_root,
         validation_alias=AliasChoices("HY3_FIXTURE_ROOT", "fixture_root"),
     )
     max_input_chars: int = Field(

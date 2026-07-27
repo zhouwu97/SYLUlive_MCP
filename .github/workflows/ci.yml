@@ -6,10 +6,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.11", "3.12"]
     env:
       HY3_MODE: fixture
@@ -24,5 +25,9 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
-      - run: uv run python scripts/selfcheck.py
+      - run: uv run python evaluation/run_evaluation.py --check
+      - run: uv run hy3-campus-decision-mcp --version
+      - run: uv run hy3-campus-decision-mcp --selfcheck
       - run: uv run python scripts/sdk_stdio_client.py
+      - run: uv build
+      - run: uv run python scripts/verify_distribution.py

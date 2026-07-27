@@ -31,6 +31,10 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/hy3_campus_decision_mcp"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"examples" = "hy3_campus_decision_mcp/resources/examples"
+"tests/fixtures/hy3" = "hy3_campus_decision_mcp/resources/fixtures/hy3"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

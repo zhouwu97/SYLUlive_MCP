@@ -1,0 +1,38 @@
+{
+  "benchmark_version": "1.0",
+  "cases": [
+    {"id":"academic-01","type":"academic","snapshot":{"courses":[],"earned_credits":0,"required_credits":108,"erke_earned":0,"erke_required":60},"expected":{"failed_course_count":0,"credit_gap":108,"erke_gap":60,"data_completeness_percent":100}},
+    {"id":"academic-02","type":"academic","snapshot":{"courses":[{"course_name":"程序设计","credits":3,"is_required":true,"grade":58}],"earned_credits":90,"required_credits":108,"erke_earned":40,"erke_required":60},"expected":{"failed_course_count":1,"failed_required_credits":3,"unknown_grade_course_count":0}},
+    {"id":"academic-03","type":"academic","snapshot":{"courses":[{"course_name":"补考课程","credits":2,"is_required":true,"grade":20,"passed":true}],"earned_credits":100,"required_credits":108,"erke_earned":60,"erke_required":60},"expected":{"failed_course_count":0,"failed_required_credits":0}},
+    {"id":"academic-04","type":"academic","snapshot":{"courses":[{"course_name":"过程考核","credits":2,"is_required":false,"grade":90,"passed":false}],"earned_credits":100,"required_credits":108,"erke_earned":60,"erke_required":60},"expected":{"failed_course_count":1,"failed_required_credits":0}},
+    {"id":"academic-05","type":"academic","snapshot":{"courses":[{"course_name":"高等数学","credits":4,"is_required":true,"grade":"F"}],"earned_credits":90,"required_credits":108,"erke_earned":30,"erke_required":60},"expected":{"failed_course_count":1,"failed_required_credits":4}},
+    {"id":"academic-06","type":"academic","snapshot":{"courses":[{"course_name":"大学物理","credits":3,"is_required":true,"grade":"59.5"}],"earned_credits":90,"required_credits":108,"erke_earned":30,"erke_required":60},"expected":{"failed_course_count":1,"failed_required_credits":3}},
+    {"id":"academic-07","type":"academic","snapshot":{"courses":[{"course_name":"成绩待定","credits":2,"is_required":true,"grade":null}],"earned_credits":90,"required_credits":108,"erke_earned":30,"erke_required":60},"expected":{"failed_course_count":0,"unknown_grade_course_count":1,"data_completeness_percent":66.67}},
+    {"id":"academic-08","type":"academic","snapshot":{"courses":[{"course_name":"学分待定","credits":null,"is_required":false,"grade":80}],"earned_credits":90,"required_credits":108,"erke_earned":30,"erke_required":60},"expected":{"missing_credit_course_count":1,"data_completeness_percent":66.67}},
+    {"id":"academic-09","type":"academic","snapshot":{"courses":[],"earned_credits":120,"required_credits":108,"erke_earned":70,"erke_required":60},"expected":{"credit_gap":0,"erke_gap":0}},
+    {"id":"academic-10","type":"academic","snapshot":{"courses":[{"course_name":"课程A","credits":2,"is_required":true,"grade":"不及格"},{"course_name":"课程B","credits":3,"is_required":true,"grade":60},{"course_name":"课程C","credits":1,"is_required":false,"passed":false}],"earned_credits":90,"required_credits":108,"erke_earned":30,"erke_required":60},"expected":{"failed_course_count":2,"failed_required_credits":2}},
+
+    {"id":"schedule-01","type":"schedule","goals":[{"name":"复习","weekly_minutes":30,"priority":"high"}],"constraints":{}},
+    {"id":"schedule-02","type":"schedule","goals":[{"name":"刷题","weekly_minutes":45,"priority":"high"}],"constraints":{}},
+    {"id":"schedule-03","type":"schedule","goals":[{"name":"阅读","weekly_minutes":60,"priority":"medium"}],"constraints":{}},
+    {"id":"schedule-04","type":"schedule","goals":[{"name":"建模","weekly_minutes":135,"priority":"high"}],"constraints":{}},
+    {"id":"schedule-05","type":"schedule","goals":[{"name":"竞赛","weekly_minutes":240,"priority":"high"},{"name":"英语","weekly_minutes":120,"priority":"medium"}],"constraints":{}},
+    {"id":"schedule-06","type":"schedule","goals":[{"name":"项目","weekly_minutes":480,"priority":"high"}],"constraints":{"daily_max_minutes":120}},
+    {"id":"schedule-07","type":"schedule","goals":[{"name":"短任务","weekly_minutes":75,"priority":"low"}],"constraints":{"minimum_block_minutes":15,"daily_max_minutes":60}},
+    {"id":"schedule-08","type":"schedule","goals":[{"name":"密集训练","weekly_minutes":1000,"priority":"high"}],"constraints":{"minimum_block_minutes":30,"daily_max_minutes":180}},
+    {"id":"schedule-09","type":"schedule","goals":[{"name":"晨间学习","weekly_minutes":210,"priority":"medium"}],"constraints":{"sleep_start":"22:00","sleep_end":"08:00"}},
+    {"id":"schedule-10","type":"schedule","goals":[{"name":"超量目标","weekly_minutes":10080,"priority":"high"}],"constraints":{"minimum_block_minutes":30,"daily_max_minutes":60}},
+
+    {"id":"competition-01","type":"competition","major":"计算机科学与技术","weekly_hours":8,"category":"计算机","recommended_hours":6,"expected_major":"high","expected_time":"high"},
+    {"id":"competition-02","type":"competition","major":"机械工程","weekly_hours":4,"category":"机械","recommended_hours":8,"expected_major":"high","expected_time":"low"},
+    {"id":"competition-03","type":"competition","major":"工商管理","weekly_hours":6,"category":"创新创业","recommended_hours":8,"expected_major":"high","expected_time":"medium"},
+    {"id":"competition-04","type":"competition","major":"化学工程","weekly_hours":8,"category":"数学","recommended_hours":8,"expected_major":"medium","expected_time":"high"},
+    {"id":"competition-05","type":"competition","major":"数据科学","weekly_hours":1,"category":"数学","recommended_hours":6,"expected_major":"high","expected_time":"low"},
+
+    {"id":"security-01","type":"security","scenario":"path","value":"../secret.env","expected_code":"path_traversal_rejected"},
+    {"id":"security-02","type":"security","scenario":"path","value":"C:\\secret.env","expected_code":"path_absolute_rejected"},
+    {"id":"security-03","type":"security","scenario":"path","value":" academic/safe_snapshot.json","expected_code":"path_invalid"},
+    {"id":"security-04","type":"security","scenario":"path","value":"academic/missing.json","expected_code":"source_not_found"},
+    {"id":"security-05","type":"security","scenario":"sensitive","value":{"courses":[],"profile":{"real_name":"REDACTED"}},"expected_code":"sensitive_field_rejected"}
+  ]
+}

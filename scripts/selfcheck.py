@@ -1,17 +1,14 @@
-"""通过真实 stdio 协议执行本地 Fixture 自检。"""
+"""兼容原开发命令的安装后 Fixture 自检包装器。"""
 
 from __future__ import annotations
 
-import asyncio
-import json
-
-from sdk_stdio_client import verify_stdio_protocol
+from hy3_campus_decision_mcp.__main__ import main as package_main
 
 
 def main() -> None:
-    """执行异步自检并输出精简结果。"""
+    """调用包内自检，确保脚本和正式 CLI 使用同一实现。"""
 
-    print(json.dumps(asyncio.run(verify_stdio_protocol()), ensure_ascii=False))
+    package_main(["--selfcheck"])
 
 
 if __name__ == "__main__":

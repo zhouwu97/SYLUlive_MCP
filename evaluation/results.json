@@ -1,0 +1,144 @@
+{
+  "benchmark_version": "1.0",
+  "case_count": 30,
+  "passed": 30,
+  "failed": 0,
+  "pass_rate_percent": 100.0,
+  "metrics": {
+    "academic_deterministic_cases": {
+      "passed": 10,
+      "total": 10
+    },
+    "schedule_hard_constraint_violations": 0,
+    "competition_dimension_separation": {
+      "passed": 5,
+      "total": 5
+    },
+    "security_rejections": {
+      "passed": 5,
+      "total": 5
+    }
+  },
+  "cases": [
+    {
+      "id": "academic-01",
+      "status": "passed"
+    },
+    {
+      "id": "academic-02",
+      "status": "passed"
+    },
+    {
+      "id": "academic-03",
+      "status": "passed"
+    },
+    {
+      "id": "academic-04",
+      "status": "passed"
+    },
+    {
+      "id": "academic-05",
+      "status": "passed"
+    },
+    {
+      "id": "academic-06",
+      "status": "passed"
+    },
+    {
+      "id": "academic-07",
+      "status": "passed"
+    },
+    {
+      "id": "academic-08",
+      "status": "passed"
+    },
+    {
+      "id": "academic-09",
+      "status": "passed"
+    },
+    {
+      "id": "academic-10",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-01",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-02",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-03",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-04",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-05",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-06",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-07",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-08",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-09",
+      "status": "passed"
+    },
+    {
+      "id": "schedule-10",
+      "status": "passed"
+    },
+    {
+      "id": "competition-01",
+      "status": "passed"
+    },
+    {
+      "id": "competition-02",
+      "status": "passed"
+    },
+    {
+      "id": "competition-03",
+      "status": "passed"
+    },
+    {
+      "id": "competition-04",
+      "status": "passed"
+    },
+    {
+      "id": "competition-05",
+      "status": "passed"
+    },
+    {
+      "id": "security-01",
+      "status": "passed"
+    },
+    {
+      "id": "security-02",
+      "status": "passed"
+    },
+    {
+      "id": "security-03",
+      "status": "passed"
+    },
+    {
+      "id": "security-04",
+      "status": "passed"
+    },
+    {
+      "id": "security-05",
+      "status": "passed"
+    }
+  ]
+}

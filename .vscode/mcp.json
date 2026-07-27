@@ -1,6 +1,7 @@
 {
-  "mcpServers": {
+  "servers": {
     "hy3-campus-decision": {
+      "type": "stdio",
       "command": "uvx",
       "args": [
         "--from",
@@ -11,5 +12,6 @@
         "HY3_MODE": "fixture"
       }
     }
-  }
+  },
+  "inputs": []
 }
