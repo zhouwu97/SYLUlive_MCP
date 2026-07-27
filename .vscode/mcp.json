@@ -5,7 +5,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@rhinobird/hy3-campus-copilot",
+        "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb5a77ec28850116d9c157f",
         "hy3-campus-decision-mcp"
       ],
       "env": {
