@@ -28,6 +28,6 @@ jobs:
       - run: uv run python evaluation/run_evaluation.py --check
       - run: uv run hy3-campus-decision-mcp --version
       - run: uv run hy3-campus-decision-mcp --selfcheck
-      - run: uv run python scripts/sdk_stdio_client.py
+      - run: uv run python scripts/sdk_stdio_client.py --check
       - run: uv build
       - run: uv run python scripts/verify_distribution.py

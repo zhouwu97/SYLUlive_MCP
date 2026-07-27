@@ -1,0 +1,35 @@
+{
+  "benchmark_version": "mcp-protocol-v1",
+  "case_count": 5,
+  "passed": 5,
+  "failed": 0,
+  "pass_rate_percent": 100.0,
+  "server": "Hy3 Campus Decision Copilot",
+  "cases": [
+    {
+      "id": "e2e-01",
+      "status": "passed",
+      "assertion": "tools/list 精确返回五个公开工具"
+    },
+    {
+      "id": "e2e-02",
+      "status": "passed",
+      "assertion": "学业分析通过 MCP 返回结构化成功结果"
+    },
+    {
+      "id": "e2e-03",
+      "status": "passed",
+      "assertion": "竞赛比较通过 MCP 保持四维结果分离"
+    },
+    {
+      "id": "e2e-04",
+      "status": "passed",
+      "assertion": "周计划通过 MCP 返回经硬约束复核的结果"
+    },
+    {
+      "id": "e2e-05",
+      "status": "passed",
+      "assertion": "路径越界通过 MCP 返回 path_traversal_rejected"
+    }
+  ]
+}

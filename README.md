@@ -12,6 +12,10 @@
 
 它不是校园聊天机器人。系统只接收最小化、非身份化数据，把确定性计算与 Hy3 推理解耦，并在模型输出后再次检查来源、Schema 和计划硬约束。它既能被 Cursor、CodeBuddy 等客户端独立调用，也已进入真实 [SYLUlive](https://github.com/zhouwu97/SYLUlive) Flutter + Go 产品链路。
 
+![Cursor 与 CodeBuddy 原生 MCP 演示](assets/demo.gif)
+
+上图是 60 秒 Fixture 模式客户端演示，展示五个工具发现、学业分析成功结果和路径越界安全拒绝；Fixture 只证明协议与确定性逻辑，真实 Hy3 调用证据单独记录。
+
 ## 30 秒安装与自检
 
 安装并查看版本，不需要克隆仓库或填写绝对路径：
@@ -48,7 +52,7 @@ uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb
 
 ## 可复现量化结果
 
-仓库公开 30 个合成案例及逐案结果，CI 会重新运行并检查结果文件是否与实现一致。
+仓库公开 30 个确定性护栏案例和 5 个完整 MCP 协议案例。CI 会重新运行并检查两份结果文件是否与实现一致。
 
 | 客观指标 | 结果 |
 | --- | ---: |
@@ -56,11 +60,13 @@ uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb
 | 周计划硬约束违规 | 0 |
 | 竞赛四维分离案例 | 5 / 5 通过 |
 | 路径与敏感字段安全拒绝 | 5 / 5 通过 |
-| 总计 | 30 / 30 通过 |
+| 确定性护栏总计 | 30 / 30 通过 |
+| 完整 MCP 协议案例 | 5 / 5 通过 |
 
 - [评测方法与复现命令](evaluation/README.md)
 - [完整案例](evaluation/cases.json)
 - [机器可读结果](evaluation/results.json)
+- [MCP 协议机器可读结果](evaluation/mcp-results.json)
 - [脱敏真实 Hy3 验证记录](assets/live-verification.md)
 
 这些结果只衡量可客观判定的计算、约束和安全属性，不把 Fixture 输出冒充真实 Hy3 效果，也不发布缺少同批提示与人工标注的“直接模型对照”。
@@ -259,7 +265,7 @@ uv run pytest -q
 uv run python evaluation/run_evaluation.py --check
 uv run hy3-campus-decision-mcp --version
 uv run hy3-campus-decision-mcp --selfcheck
-uv run python scripts/sdk_stdio_client.py
+uv run python scripts/sdk_stdio_client.py --check
 uv run python scripts/validate_examples.py
 uv build
 uv run python scripts/verify_distribution.py
@@ -291,7 +297,7 @@ examples/policy_bundle/       固定 SHA 的 v0.8 政策 Bundle 和共享意图�
 examples/campus_documents/    公开演示文档
 tests/fixtures/               Fixture Provider 固定响应
 clients/                      Cursor 与 CodeBuddy 配置
-evaluation/                   30 个合成案例、运行器和机器可读结果
+evaluation/                   30 个护栏案例、5 个 MCP 协议案例及机器可读结果
 scripts/                      构建隔离验证、stdio、示例和 Live 验证脚本
 assets/contracts/             版本化输入/输出 Schema 清单
 assets/live-verification.md   脱敏真实验证记录
