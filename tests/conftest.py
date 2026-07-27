@@ -18,5 +18,9 @@ def demo_settings() -> Settings:
 
 
 @pytest.fixture
-def demo_runtime(demo_settings: Settings) -> ToolRuntime:
-    return ToolRuntime(demo_settings)
+async def demo_runtime(demo_settings: Settings):
+    runtime = ToolRuntime(demo_settings)
+    try:
+        yield runtime
+    finally:
+        await runtime.aclose()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from typing import Any
 
@@ -13,24 +14,32 @@ from ..safety.endpoint_policy import normalize_internal_endpoint
 
 
 class SyluliveApiClient:
-    """不持有用户身份信息，只转发进程级短期 Grant。"""
+    """复用连接池，并只转发当前请求上下文中的短期 Grant。"""
 
     def __init__(
         self,
         settings: Settings,
         *,
         transport: httpx.AsyncBaseTransport | None = None,
-        grant_provider: Callable[[], str | None] | None = None,
+        grant_provider: Callable[[], str | None],
     ) -> None:
         self._settings = settings
-        self._transport = transport
         self._grant_provider = grant_provider
+        self._client = httpx.AsyncClient(
+            timeout=settings.timeout_seconds,
+            follow_redirects=False,
+            transport=transport,
+        )
+
+    async def aclose(self) -> None:
+        """关闭共享连接池。"""
+
+        await self._client.aclose()
 
     async def post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         """调用一个固定内部端点，并把故障归一为脱敏领域错误。"""
 
-        contextual_grant = self._grant_provider() if self._grant_provider is not None else None
-        grant = contextual_grant or self._settings.grant_token.get_secret_value().strip()
+        grant = self._grant_provider()
         if not grant:
             raise ServiceConfigurationError(
                 "grant_missing",
@@ -42,16 +51,32 @@ class SyluliveApiClient:
         )
         url = f"{base.rstrip('/')}/{path.lstrip('/')}"
         try:
-            async with httpx.AsyncClient(
-                timeout=self._settings.timeout_seconds,
-                follow_redirects=False,
-                transport=self._transport,
-            ) as client:
-                response = await client.post(
-                    url,
-                    json=payload,
-                    headers={"Authorization": f"Bearer {grant}"},
-                )
+            async with self._client.stream(
+                "POST",
+                url,
+                json=payload,
+                headers={"Authorization": f"Bearer {grant}"},
+            ) as response:
+                if response.status_code in {401, 403}:
+                    raise InternalApiError(
+                        "grant_rejected", "The short-lived MCP grant was rejected."
+                    )
+                if response.status_code == 429:
+                    raise InternalApiError("quota_exceeded", "The internal API quota was exceeded.")
+                if response.status_code >= 400:
+                    raise InternalApiError(
+                        "internal_api_error", "The internal API rejected the request."
+                    )
+                chunks: list[bytes] = []
+                received = 0
+                async for chunk in response.aiter_bytes():
+                    received += len(chunk)
+                    if received > self._settings.max_api_response_bytes:
+                        raise InternalApiError(
+                            "internal_api_response_too_large",
+                            "The internal API response exceeded the configured size limit.",
+                        )
+                    chunks.append(chunk)
         except httpx.TimeoutException as error:
             raise InternalApiError(
                 "internal_api_timeout", "The internal API request timed out."
@@ -61,15 +86,9 @@ class SyluliveApiClient:
                 "internal_api_unavailable", "The internal API is unavailable."
             ) from error
 
-        if response.status_code in {401, 403}:
-            raise InternalApiError("grant_rejected", "The short-lived MCP grant was rejected.")
-        if response.status_code == 429:
-            raise InternalApiError("quota_exceeded", "The internal API quota was exceeded.")
-        if response.status_code >= 400:
-            raise InternalApiError("internal_api_error", "The internal API rejected the request.")
         try:
-            body = response.json()
-        except ValueError as error:
+            body = json.loads(b"".join(chunks))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise InternalApiError(
                 "internal_api_invalid_json", "The internal API returned invalid JSON."
             ) from error

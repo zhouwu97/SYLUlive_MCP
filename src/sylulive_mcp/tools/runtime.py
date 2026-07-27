@@ -7,6 +7,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol, TypeVar
 
+import httpx
 from pydantic import BaseModel, ValidationError
 
 from ..auth import GrantContext
@@ -26,15 +27,25 @@ InputModelT = TypeVar("InputModelT", bound=BaseModel)
 class InternalApi(Protocol):
     async def post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]: ...
 
+    async def aclose(self) -> None: ...
+
 
 class ToolRuntime:
     """集中创建内部 API、路径策略和演示数据源依赖。"""
 
-    def __init__(self, settings: Settings, *, api_client: InternalApi | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        api_client: InternalApi | None = None,
+        api_transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self.settings = settings
         self.grants = GrantContext()
         self.api_client = api_client or SyluliveApiClient(
-            settings, grant_provider=self.grants.current
+            settings,
+            transport=api_transport,
+            grant_provider=self.grants.current,
         )
         self.path_policy = WorkspacePathPolicy(
             settings.demo_root_path,
@@ -45,6 +56,11 @@ class ToolRuntime:
             max_files=settings.max_source_files,
         )
         self.competition_catalog = CompetitionCatalogRepository(self.path_policy)
+
+    async def aclose(self) -> None:
+        """释放内部 API 连接池。"""
+
+        await self.api_client.aclose()
 
     async def run(self, operation: Callable[[], Awaitable[dict[str, Any]]]) -> dict[str, Any]:
         """统一处理禁用模式、领域错误和未预期内部错误。"""

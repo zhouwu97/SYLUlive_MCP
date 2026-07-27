@@ -7,13 +7,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 
 
-def bearer_token(request: object | None) -> str | None:
-    """从 HTTP 请求提取 Bearer Grant；stdio 请求没有 Header 上下文。"""
+def parse_bearer_authorization(authorization: str) -> str | None:
+    """解析标准 Authorization 值，不依赖具体 HTTP 框架的请求对象。"""
 
-    headers = getattr(request, "headers", None)
-    if headers is None:
-        return None
-    authorization = headers.get("authorization", "")
     scheme, separator, value = authorization.partition(" ")
     if separator and scheme.casefold() == "bearer" and value.strip():
         return value.strip()

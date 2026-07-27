@@ -11,9 +11,12 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
+from .config import ServiceMode
 from .constants import MCP_CONTRACT_VERSION
 from .schemas.academic import AcademicAnalysisInput
 from .schemas.tools import (
+    AcademicGetSummaryInput,
+    AcademicGetSummarySuccess,
     AcademicSummarySuccess,
     CompetitionCompareFactsInput,
     CompetitionCompareSuccess,
@@ -21,6 +24,9 @@ from .schemas.tools import (
     CompetitionGetDetailsInput,
     CompetitionSearchInput,
     CompetitionSearchSuccess,
+    DemoCompetitionCompareFactsInput,
+    DemoFindFreeWindowsInput,
+    DemoValidatePlanInput,
     FindFreeWindowsInput,
     FreeWindowsSuccess,
     PlanValidationSuccess,
@@ -32,6 +38,7 @@ from .schemas.tools import (
 )
 from .tools import (
     academic_calculate_summary,
+    academic_get_summary,
     competition_compare_facts,
     competition_get_details,
     competition_search,
@@ -85,7 +92,7 @@ class ToolContract:
         return schema_digest(self.input_schema, self.output_schema)
 
 
-TOOL_CONTRACTS: dict[str, ToolContract] = {
+_SHARED_TOOL_CONTRACTS: dict[str, ToolContract] = {
     "policy_search": ToolContract(
         "policy_search",
         "检索已发布政策片段；每次最多 4 个查询、20 条结果，不生成最终回答。",
@@ -114,35 +121,87 @@ TOOL_CONTRACTS: dict[str, ToolContract] = {
         response_type(CompetitionDetailsSuccess),
         competition_get_details,
     ),
+}
+
+
+PRODUCTION_TOOL_CONTRACTS: dict[str, ToolContract] = {
+    **_SHARED_TOOL_CONTRACTS,
     "competition_compare_facts": ToolContract(
         "competition_compare_facts",
-        "并列比较学校认定、人工评价、画像匹配、时间和证据质量，不计算总分。",
+        "按稳定标识从 Go 服务读取并比较赛事事实，不接受调用方提交的事实字段。",
         CompetitionCompareFactsInput,
         response_type(CompetitionCompareSuccess),
         competition_compare_facts,
     ),
-    "academic_calculate_summary": ToolContract(
-        "academic_calculate_summary",
-        "确定性计算学分、挂科、GPA 透传和数据完整度，不生成风险叙事。",
-        AcademicAnalysisInput,
-        response_type(AcademicSummarySuccess),
-        academic_calculate_summary,
+    "academic_get_summary": ToolContract(
+        "academic_get_summary",
+        "通过当前 Grant 获取最小化学业汇总，不接收课程或成绩明细。",
+        AcademicGetSummaryInput,
+        response_type(AcademicGetSummarySuccess),
+        academic_get_summary,
     ),
     "schedule_find_free_windows": ToolContract(
         "schedule_find_free_windows",
-        "扣除固定事件和睡眠后计算一周空闲窗口。",
+        "通过当前 Grant 获取固定日程，再计算一周空闲窗口。",
         FindFreeWindowsInput,
         response_type(FreeWindowsSuccess),
         schedule_find_free_windows,
     ),
     "schedule_validate_plan": ToolContract(
         "schedule_validate_plan",
-        "确定性校验候选计划的冲突、单日超限和未安排时长。",
+        "通过当前 Grant 获取固定日程，再校验候选计划硬约束。",
         ValidatePlanInput,
         response_type(PlanValidationSuccess),
         schedule_validate_plan,
     ),
 }
+
+
+DEMO_TOOL_CONTRACTS: dict[str, ToolContract] = {
+    **_SHARED_TOOL_CONTRACTS,
+    "competition_compare_facts": ToolContract(
+        "competition_compare_facts",
+        "使用本地演示事实并列计算画像匹配，不生成推荐。",
+        DemoCompetitionCompareFactsInput,
+        response_type(CompetitionCompareSuccess),
+        competition_compare_facts,
+    ),
+    "academic_calculate_summary": ToolContract(
+        "academic_calculate_summary",
+        "使用本地演示快照确定性计算学业汇总。",
+        AcademicAnalysisInput,
+        response_type(AcademicSummarySuccess),
+        academic_calculate_summary,
+    ),
+    "schedule_find_free_windows": ToolContract(
+        "schedule_find_free_windows",
+        "使用本地演示课表计算一周空闲窗口。",
+        DemoFindFreeWindowsInput,
+        response_type(FreeWindowsSuccess),
+        schedule_find_free_windows,
+    ),
+    "schedule_validate_plan": ToolContract(
+        "schedule_validate_plan",
+        "使用本地演示课表校验候选计划硬约束。",
+        DemoValidatePlanInput,
+        response_type(PlanValidationSuccess),
+        schedule_validate_plan,
+    ),
+}
+
+# 默认导出生产契约，避免下游误用仅供演示的原始数据输入。
+TOOL_CONTRACTS = PRODUCTION_TOOL_CONTRACTS
+
+
+def contracts_for_mode(mode: ServiceMode) -> dict[str, ToolContract]:
+    """按运行模式选择公开工具，禁用模式只保留状态工具。"""
+
+    if mode is ServiceMode.PRODUCTION:
+        return PRODUCTION_TOOL_CONTRACTS
+    if mode is ServiceMode.DEMO:
+        return DEMO_TOOL_CONTRACTS
+    return {}
+
 
 NON_CONTRACT_KEYS = frozenset({"title", "description", "examples"})
 
@@ -176,13 +235,21 @@ def build_contract_manifest() -> dict[str, Any]:
 
     return {
         "contract_version": MCP_CONTRACT_VERSION,
-        "tools": {
+        "production_tools": {
             name: {
                 "schema_sha256": contract.schema_sha256,
                 "input_schema": contract.input_schema,
                 "output_schema": contract.output_schema,
             }
-            for name, contract in sorted(TOOL_CONTRACTS.items())
+            for name, contract in sorted(PRODUCTION_TOOL_CONTRACTS.items())
+        },
+        "demo_tools": {
+            name: {
+                "schema_sha256": contract.schema_sha256,
+                "input_schema": contract.input_schema,
+                "output_schema": contract.output_schema,
+            }
+            for name, contract in sorted(DEMO_TOOL_CONTRACTS.items())
         },
     }
 
@@ -190,4 +257,4 @@ def build_contract_manifest() -> dict[str, Any]:
 def committed_manifest_path() -> Path:
     """返回版本化清单在仓库中的固定位置。"""
 
-    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v2.json"
+    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v3.json"

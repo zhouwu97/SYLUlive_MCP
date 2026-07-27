@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import AliasChoices, Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -59,6 +59,12 @@ class Settings(BaseSettings):
         pattern=r"^/[a-zA-Z0-9/_-]*$",
         validation_alias=AliasChoices("SYLULIVE_MCP_PATH", "http_path"),
     )
+    http_allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver"],
+        min_length=1,
+        max_length=20,
+        validation_alias=AliasChoices("SYLULIVE_MCP_ALLOWED_HOSTS", "http_allowed_hosts"),
+    )
     api_base: str = Field(
         default="http://127.0.0.1:8080",
         validation_alias=AliasChoices("SYLULIVE_API_BASE", "api_base"),
@@ -72,6 +78,18 @@ class Settings(BaseSettings):
         gt=0,
         le=120,
         validation_alias=AliasChoices("SYLULIVE_API_TIMEOUT_SECONDS", "timeout_seconds"),
+    )
+    max_api_response_bytes: int = Field(
+        default=2 * 1_048_576,
+        ge=1_024,
+        le=20 * 1_048_576,
+        validation_alias=AliasChoices("SYLULIVE_API_MAX_RESPONSE_BYTES", "max_api_response_bytes"),
+    )
+    max_http_request_bytes: int = Field(
+        default=1_048_576,
+        ge=1_024,
+        le=20 * 1_048_576,
+        validation_alias=AliasChoices("SYLULIVE_MCP_MAX_REQUEST_BYTES", "max_http_request_bytes"),
     )
     demo_root: Path = Field(
         default=Path("examples"),
@@ -115,6 +133,14 @@ class Settings(BaseSettings):
         """仅报告短期 Grant 是否存在。"""
 
         return bool(self.grant_token.get_secret_value().strip())
+
+    @model_validator(mode="after")
+    def reject_process_grant_for_http(self) -> Settings:
+        """HTTP 必须逐请求携带 Grant，禁止配置进程级共享身份。"""
+
+        if self.transport is TransportMode.STREAMABLE_HTTP and self.has_grant:
+            raise ValueError("SYLULIVE_MCP_GRANT is only valid for stdio transport")
+        return self
 
 
 def load_settings() -> Settings:

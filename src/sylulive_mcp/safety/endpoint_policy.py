@@ -17,11 +17,11 @@ def _is_allowed_http_host(host: str, allow_private_http: bool) -> bool:
         address = ipaddress.ip_address(host)
     except ValueError:
         return False
+    if address.is_unspecified:
+        return False
     if address.is_loopback:
         return True
-    return allow_private_http and (
-        address.is_private or address.is_link_local or address.is_unspecified
-    )
+    return allow_private_http and (address.is_private or address.is_link_local)
 
 
 def normalize_internal_endpoint(raw_base: str, *, allow_private_http: bool) -> str:

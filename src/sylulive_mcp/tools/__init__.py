@@ -1,6 +1,7 @@
 """MCP 公开事实工具。"""
 
 from .academic_calculate_summary import academic_calculate_summary
+from .academic_get_summary import academic_get_summary
 from .competition_compare_facts import competition_compare_facts
 from .competition_get_details import competition_get_details
 from .competition_search import competition_search
@@ -11,6 +12,7 @@ from .schedule_validate_plan import schedule_validate_plan
 
 __all__ = [
     "academic_calculate_summary",
+    "academic_get_summary",
     "competition_compare_facts",
     "competition_get_details",
     "competition_search",

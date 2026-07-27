@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from ..config import ServiceMode, Settings
-from ..constants import CORE_TOOL_NAMES, MCP_CONTRACT_VERSION, PACKAGE_VERSION, STATUS_TOOL_NAME
-from ..contracts import TOOL_CONTRACTS
+from ..constants import MCP_CONTRACT_VERSION, PACKAGE_VERSION, STATUS_TOOL_NAME
+from ..contracts import contracts_for_mode
 from ..data_sources import inspect_policy_bundle
 
 
@@ -12,7 +12,8 @@ def build_status(settings: Settings) -> dict[str, object]:
     """返回服务与契约事实，不暴露 Grant、身份或绝对路径。"""
 
     enabled = settings.mode is not ServiceMode.DISABLED
-    available_tools = [STATUS_TOOL_NAME, *CORE_TOOL_NAMES] if enabled else [STATUS_TOOL_NAME]
+    active_contracts = contracts_for_mode(settings.mode)
+    available_tools = [STATUS_TOOL_NAME, *active_contracts] if enabled else [STATUS_TOOL_NAME]
     result: dict[str, object] = {
         "service_version": PACKAGE_VERSION,
         "contract_version": MCP_CONTRACT_VERSION,
@@ -22,8 +23,8 @@ def build_status(settings: Settings) -> dict[str, object]:
         "grant_configured": settings.has_grant,
         "available_tools": available_tools,
         "tool_contracts": {
-            name: {"schema_sha256": TOOL_CONTRACTS[name].schema_sha256}
-            for name in CORE_TOOL_NAMES
+            name: {"schema_sha256": contract.schema_sha256}
+            for name, contract in active_contracts.items()
             if enabled
         },
         "architecture": {

@@ -5,20 +5,25 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from ..config import ServiceMode
 from ..deterministic.schedule import _overlaps, _sleep_intervals
 from ..result_envelope import result_meta
 from ..schemas.schedule import time_to_minutes
-from ..schemas.tools import ValidatePlanInput
+from ..schemas.tools import DemoValidatePlanInput, ValidatePlanInput
 from .runtime import ToolRuntime
-from .schedule_common import load_schedule
+from .schedule_common import load_authorized_schedule, load_demo_schedule
 
 
 async def schedule_validate_plan(runtime: ToolRuntime, raw: dict[str, Any]) -> dict[str, Any]:
     """检查固定事件、睡眠、时长、重叠和单日上限。"""
 
     async def operation() -> dict[str, Any]:
-        request = runtime.validate_input(ValidatePlanInput, raw)
-        schedule = load_schedule(runtime, request)
+        if runtime.settings.mode is ServiceMode.PRODUCTION:
+            request = runtime.validate_input(ValidatePlanInput, raw)
+            schedule = await load_authorized_schedule(runtime, request.week_start.isoformat())
+        else:
+            request = runtime.validate_input(DemoValidatePlanInput, raw)
+            schedule = load_demo_schedule(runtime, request)
         fixed_by_day: dict[int, list[tuple[str, int, int]]] = defaultdict(list)
         for event in schedule.fixed_events:
             fixed_by_day[event.weekday].append(

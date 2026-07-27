@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -20,7 +20,7 @@ class StrictOutputModel(BaseModel):
 
 
 class ResultMetadata(StrictOutputModel):
-    schema_version: Literal["2"]
+    schema_version: Literal["3"]
     generated_at: datetime
 
 
@@ -130,6 +130,11 @@ class CompetitionDetailsSuccess(StrictOutputModel):
 
 
 class CompetitionCompareFactsInput(StrictInputModel):
+    competition_ids: list[StableId] = Field(min_length=2, max_length=5)
+    available_weekly_hours: int | None = Field(default=None, ge=1, le=40)
+
+
+class DemoCompetitionCompareFactsInput(StrictInputModel):
     competitions: list[CompetitionFact] = Field(min_length=2, max_length=5)
     student_profile: StudentProfile
 
@@ -181,18 +186,37 @@ class AcademicSummarySuccess(StrictOutputModel):
     meta: ResultMetadata
 
 
-class ScheduleSourceInput(StrictInputModel):
+class AcademicGetSummaryInput(StrictInputModel):
+    semester: Literal["current"] = "current"
+
+
+class AuthorizedAcademicSummary(StrictOutputModel):
+    earned_credits: float = Field(ge=0, le=1_000)
+    required_credits: float = Field(ge=0, le=1_000)
+    failed_course_count: int = Field(ge=0, le=500)
+    failed_credits: float = Field(ge=0, le=1_000)
+    gpa: float | None = Field(default=None, ge=0, le=10)
+    data_completeness: Literal["complete", "partial"]
+
+
+class AcademicGetSummarySuccess(StrictOutputModel):
+    status: Literal["ok"]
+    result: AuthorizedAcademicSummary
+    meta: ResultMetadata
+
+
+class DemoScheduleSourceInput(StrictInputModel):
     schedule: WeeklySchedule | None = None
     schedule_path: str | None = Field(default=None, min_length=1, max_length=500)
 
     @model_validator(mode="after")
-    def exactly_one_source(self) -> ScheduleSourceInput:
+    def exactly_one_source(self) -> DemoScheduleSourceInput:
         if (self.schedule is None) == (self.schedule_path is None):
             raise ValueError("Provide exactly one of schedule or schedule_path")
         return self
 
 
-class FindFreeWindowsInput(ScheduleSourceInput):
+class DemoFindFreeWindowsInput(DemoScheduleSourceInput):
     constraints: ScheduleConstraints = Field(default_factory=ScheduleConstraints)
     minimum_window_minutes: int = Field(default=30, ge=15, le=480)
 
@@ -212,6 +236,19 @@ class FreeWindowsSuccess(StrictOutputModel):
     meta: ResultMetadata
 
 
+class FindFreeWindowsInput(StrictInputModel):
+    week_start: date
+    constraints: ScheduleConstraints = Field(default_factory=ScheduleConstraints)
+    minimum_window_minutes: int = Field(default=30, ge=15, le=480)
+
+    @field_validator("week_start")
+    @classmethod
+    def require_monday(cls, value: date) -> date:
+        if value.weekday() != 0:
+            raise ValueError("week_start must be a Monday")
+        return value
+
+
 class ProposedPlanItem(StrictInputModel):
     item: str = Field(min_length=1, max_length=200)
     weekday: int = Field(ge=1, le=7)
@@ -227,10 +264,24 @@ class ProposedPlanItem(StrictInputModel):
         return validate_time(value)
 
 
-class ValidatePlanInput(ScheduleSourceInput):
+class DemoValidatePlanInput(DemoScheduleSourceInput):
     constraints: ScheduleConstraints = Field(default_factory=ScheduleConstraints)
     plan: list[ProposedPlanItem] = Field(default_factory=list, max_length=200)
     requested_minutes: int | None = Field(default=None, ge=0, le=10_080)
+
+
+class ValidatePlanInput(StrictInputModel):
+    week_start: date
+    constraints: ScheduleConstraints = Field(default_factory=ScheduleConstraints)
+    plan: list[ProposedPlanItem] = Field(default_factory=list, max_length=200)
+    requested_minutes: int | None = Field(default=None, ge=0, le=10_080)
+
+    @field_validator("week_start")
+    @classmethod
+    def require_monday(cls, value: date) -> date:
+        if value.weekday() != 0:
+            raise ValueError("week_start must be a Monday")
+        return value
 
 
 class PlanConflict(StrictOutputModel):

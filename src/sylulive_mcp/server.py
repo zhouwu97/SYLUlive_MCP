@@ -16,12 +16,14 @@ from mcp.server.stdio import stdio_server
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from pydantic import TypeAdapter, ValidationError
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.routing import Route
 
-from .auth import bearer_token
+from .auth import GrantContext, parse_bearer_authorization
 from .config import ServiceMode, Settings, TransportMode, load_settings
 from .constants import PACKAGE_VERSION, SERVER_NAME, STATUS_TOOL_NAME
-from .contracts import TOOL_CONTRACTS, ToolContract
+from .contracts import ToolContract, contracts_for_mode
 from .errors import CampusMcpError
 from .result_envelope import error_envelope
 from .tools.runtime import ToolRuntime
@@ -61,12 +63,12 @@ def _tool_definition(contract: ToolContract) -> types.Tool:
     )
 
 
-def build_server(settings: Settings) -> Server:
+def build_server(settings: Settings, runtime: ToolRuntime | None = None) -> Server:
     """创建显式列举和调用工具的 MCP Server。"""
 
     server = Server(SERVER_NAME, version=PACKAGE_VERSION)
-    runtime = ToolRuntime(settings)
-    active_contracts = TOOL_CONTRACTS if settings.mode is not ServiceMode.DISABLED else {}
+    runtime = runtime or ToolRuntime(settings)
+    active_contracts = contracts_for_mode(settings.mode)
 
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -81,10 +83,12 @@ def build_server(settings: Settings) -> Server:
         contract = active_contracts.get(name)
         if contract is None:
             raise ValueError(f"未知或当前模式不可用的工具：{name}")
-        transport_request = server.request_context.request
-        request_grant = bearer_token(transport_request)
-        configured_grant = settings.grant_token.get_secret_value().strip()
-        active_grant = request_grant or configured_grant or None
+        if settings.transport is TransportMode.STREAMABLE_HTTP:
+            active_grant = runtime.grants.current()
+        else:
+            active_grant = (
+                runtime.grants.current() or settings.grant_token.get_secret_value().strip() or None
+            )
         if settings.mode is ServiceMode.PRODUCTION and active_grant is None:
             return error_envelope(
                 CampusMcpError(
@@ -114,29 +118,86 @@ def build_server(settings: Settings) -> Server:
 async def serve(settings: Settings) -> None:
     """启动 stdio 事件循环，普通日志绝不写入协议输出。"""
 
-    server = build_server(settings)
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            server.create_initialization_options(),
-        )
+    runtime = ToolRuntime(settings)
+    server = build_server(settings, runtime)
+    try:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(
+                read_stream,
+                write_stream,
+                server.create_initialization_options(),
+            )
+    finally:
+        await runtime.aclose()
 
 
 class _StreamableHttpAsgiApp:
-    """把 SDK SessionManager 适配为 Starlette ASGI 端点。"""
+    """在 ASGI 请求边界绑定 Grant，再把请求交给 SDK SessionManager。"""
 
-    def __init__(self, manager: StreamableHTTPSessionManager) -> None:
+    def __init__(
+        self,
+        manager: StreamableHTTPSessionManager,
+        grants: GrantContext,
+        max_request_bytes: int,
+    ) -> None:
         self._manager = manager
+        self._grants = grants
+        self._max_request_bytes = max_request_bytes
 
     async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
-        await self._manager.handle_request(scope, receive, send)
+        if scope["type"] != "http":
+            await self._manager.handle_request(scope, receive, send)
+            return
+
+        headers = {
+            key.decode("latin1").casefold(): value.decode("latin1")
+            for key, value in scope.get("headers", [])
+        }
+        content_length = headers.get("content-length")
+        if content_length and content_length.isdigit():
+            if int(content_length) > self._max_request_bytes:
+                await self._reject_too_large(send)
+                return
+
+        received = 0
+
+        async def limited_receive() -> Any:
+            nonlocal received
+            message = await receive()
+            if message.get("type") == "http.request":
+                received += len(message.get("body", b""))
+                if received > self._max_request_bytes:
+                    raise _HttpRequestTooLarge
+            return message
+
+        grant = parse_bearer_authorization(headers.get("authorization", ""))
+        try:
+            with self._grants.bind(grant):
+                await self._manager.handle_request(scope, limited_receive, send)
+        except _HttpRequestTooLarge:
+            await self._reject_too_large(send)
+
+    @staticmethod
+    async def _reject_too_large(send: Any) -> None:
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 413,
+                "headers": [(b"content-type", b"text/plain; charset=utf-8")],
+            }
+        )
+        await send({"type": "http.response.body", "body": b"Request body too large"})
 
 
-def build_http_app(settings: Settings) -> Starlette:
+class _HttpRequestTooLarge(Exception):
+    """ASGI 请求体超过配置上限。"""
+
+
+def build_http_app(settings: Settings, runtime: ToolRuntime | None = None) -> Starlette:
     """构造无服务器状态的 Streamable HTTP `/mcp` 应用。"""
 
-    server = build_server(settings)
+    runtime = runtime or ToolRuntime(settings)
+    server = build_server(settings, runtime)
     manager = StreamableHTTPSessionManager(
         app=server,
         json_response=True,
@@ -145,11 +206,28 @@ def build_http_app(settings: Settings) -> Starlette:
 
     @asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncIterator[None]:
-        async with manager.run():
-            yield
+        try:
+            async with manager.run():
+                yield
+        finally:
+            await runtime.aclose()
+
+    allowed_hosts = list(settings.http_allowed_hosts)
+    if settings.http_host not in {"0.0.0.0", "::"} and settings.http_host not in allowed_hosts:
+        allowed_hosts.append(settings.http_host)
 
     return Starlette(
-        routes=[Route(settings.http_path, endpoint=_StreamableHttpAsgiApp(manager))],
+        routes=[
+            Route(
+                settings.http_path,
+                endpoint=_StreamableHttpAsgiApp(
+                    manager,
+                    runtime.grants,
+                    settings.max_http_request_bytes,
+                ),
+            )
+        ],
+        middleware=[Middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)],
         lifespan=lifespan,
     )
 

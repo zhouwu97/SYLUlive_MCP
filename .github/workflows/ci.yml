@@ -12,9 +12,8 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     env:
-      HY3_MODE: fixture
-      HY3_CAMPUS_ROOT: ./examples
-      HY3_FIXTURE_ROOT: ./tests/fixtures/hy3
+      SYLULIVE_MCP_MODE: demo
+      SYLULIVE_DEMO_ROOT: ./examples
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -26,3 +25,4 @@ jobs:
       - run: uv run pytest -q
       - run: uv run python scripts/selfcheck.py
       - run: uv run python scripts/sdk_stdio_client.py
+      - run: uv run python scripts/sdk_streamable_http_client.py

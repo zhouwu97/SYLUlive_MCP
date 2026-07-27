@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..config import ServiceMode
 from ..result_envelope import result_meta
-from ..schemas.tools import CompetitionCompareFactsInput
+from ..schemas.tools import CompetitionCompareFactsInput, DemoCompetitionCompareFactsInput
 from .runtime import ToolRuntime
 
 _MAJOR_KEYWORDS = {
@@ -30,7 +31,18 @@ async def competition_compare_facts(runtime: ToolRuntime, raw: dict[str, Any]) -
     """只计算画像匹配并保留原始事实，不生成综合分或推荐。"""
 
     async def operation() -> dict[str, Any]:
-        request = runtime.validate_input(CompetitionCompareFactsInput, raw)
+        if runtime.settings.mode is ServiceMode.PRODUCTION:
+            request = runtime.validate_input(CompetitionCompareFactsInput, raw)
+            response = await runtime.api_client.post(
+                "/internal/mcp/competition/compare", request.model_dump(mode="json")
+            )
+            return {
+                "status": "ok",
+                "competitions": response.get("competitions"),
+                "meta": result_meta(),
+            }
+
+        request = runtime.validate_input(DemoCompetitionCompareFactsInput, raw)
         profile = request.student_profile
         comparisons = []
         for competition in request.competitions:
