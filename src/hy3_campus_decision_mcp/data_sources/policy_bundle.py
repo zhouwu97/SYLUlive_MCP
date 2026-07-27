@@ -13,6 +13,14 @@ POLICY_BUNDLE_VERSION = "v0.8"
 POLICY_BUNDLE_FILE = "sylulive-policy-bundle-v0.8.jsonl"
 POLICY_CONTRACT_FILE = "policy_query_contract_v0.8.json"
 POLICY_MANIFEST_FILE = "policy-bundle-manifest.json"
+POLICY_SHA256_CANONICALIZATION = "newline-lf-v1"
+
+
+def canonical_policy_sha256(data: bytes) -> str:
+    """按 LF 规范化换行后计算摘要，避免 Git 跨平台检出改变校验结果。"""
+
+    normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def inspect_policy_bundle(campus_root: Path, *, strict: bool = False) -> dict[str, Any]:
@@ -32,10 +40,11 @@ def inspect_policy_bundle(campus_root: Path, *, strict: bool = False) -> dict[st
         bundle = (root / POLICY_BUNDLE_FILE).read_bytes()
         contract = (root / POLICY_CONTRACT_FILE).read_bytes()
         manifest = json.loads((root / POLICY_MANIFEST_FILE).read_text(encoding="utf-8"))
-        bundle_sha = hashlib.sha256(bundle).hexdigest()
-        contract_sha = hashlib.sha256(contract).hexdigest()
+        bundle_sha = canonical_policy_sha256(bundle)
+        contract_sha = canonical_policy_sha256(contract)
         valid = (
             manifest.get("version") == POLICY_BUNDLE_VERSION
+            and manifest.get("sha256_canonicalization") == POLICY_SHA256_CANONICALIZATION
             and bundle_sha == manifest.get("documents_sha256")
             and contract_sha == manifest.get("intent_contract_sha256")
         )

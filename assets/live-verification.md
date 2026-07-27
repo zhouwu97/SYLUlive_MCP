@@ -17,8 +17,8 @@
 | API Host | 已脱敏且未写入仓库 |
 | `HY3_MODE` | `live` |
 | Fixture 已关闭 | 已验证 |
-| Bundle SHA-256 | `2b93e4b02819497f821bddb73c5a5cb6e5fe711379e1986c19cccaa0cb4f7b2d` |
-| Manifest 文件 SHA-256 | `9f32fdd68414f0de3d159b85fc90121af530cd421964426bd23f3e6d0ef627d3` |
+| Bundle SHA-256 | `2b93e4b02819497f821bddb73c5a5cb6e5fe711379e1986c19cccaa0cb4f7b2d`（`newline-lf-v1` 规范化摘要） |
+| Manifest 文件 SHA-256 | `155320f6a0ea4da8494eb16c7b37aacbd739d4913bdd412cf0709d2b23a90a79` |
 
 ## 1. 真实调用与协议
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -10,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from hy3_campus_decision_mcp.config import Hy3Mode, Settings
+from hy3_campus_decision_mcp.data_sources.policy_bundle import canonical_policy_sha256
 from hy3_campus_decision_mcp.errors import CampusMcpError
 from hy3_campus_decision_mcp.tools.runtime import ToolRuntime
 
@@ -90,14 +90,22 @@ def test_single_character_overlap_is_not_a_match(fixture_runtime: ToolRuntime) -
 def test_bundle_and_contract_match_manifest(fixture_runtime: ToolRuntime) -> None:
     root = fixture_runtime.settings.campus_root_path / "policy_bundle"
     manifest = json.loads((root / "policy-bundle-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["sha256_canonicalization"] == "newline-lf-v1"
     assert (
-        hashlib.sha256((root / "sylulive-policy-bundle-v0.8.jsonl").read_bytes()).hexdigest()
+        canonical_policy_sha256((root / "sylulive-policy-bundle-v0.8.jsonl").read_bytes())
         == manifest["documents_sha256"]
     )
     assert (
-        hashlib.sha256((root / "policy_query_contract_v0.8.json").read_bytes()).hexdigest()
+        canonical_policy_sha256((root / "policy_query_contract_v0.8.json").read_bytes())
         == manifest["intent_contract_sha256"]
     )
+
+
+def test_policy_digest_is_stable_across_line_endings() -> None:
+    payload_lf = b'{"version":"v0.8"}\n{"source_id":"one"}\n'
+    payload_crlf = payload_lf.replace(b"\n", b"\r\n")
+
+    assert canonical_policy_sha256(payload_lf) == canonical_policy_sha256(payload_crlf)
 
 
 def test_corrupted_policy_bundle_returns_explicit_integrity_error(
