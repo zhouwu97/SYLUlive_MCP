@@ -54,6 +54,11 @@ class SourceMetadata(StrictContractModel):
     source_type: str = Field(min_length=1, max_length=100)
     official: bool | None = None
     effective_date: str | None = Field(default=None, max_length=100)
+    category: str | None = Field(default=None, max_length=100)
+    document_type: str | None = Field(default=None, max_length=200)
+    department: str | None = Field(default=None, max_length=300)
+    effective_to: str | None = Field(default=None, max_length=100)
+    section_title: str | None = Field(default=None, max_length=500)
 
 
 class ErrorEnvelope(StrictContractModel):
@@ -195,9 +200,7 @@ CampusQuestionResponse = Annotated[
 CompetitionResponse = Annotated[
     CompetitionSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
 ]
-AcademicResponse = Annotated[
-    AcademicSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
-]
+AcademicResponse = Annotated[AcademicSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")]
 WeeklyPlanResponse = Annotated[
     WeeklyPlanSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
 ]

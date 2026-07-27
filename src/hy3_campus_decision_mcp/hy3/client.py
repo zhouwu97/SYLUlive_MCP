@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any, Literal, TypeVar
@@ -18,6 +19,9 @@ from .output_validation import validate_provider_output
 
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 ReasoningEffort = Literal["no_think", "low", "high"]
+_THINK_WRAPPER_SUFFIX = re.compile(
+    r"^[ \t\r\n]*(?:</?think:[^<>\s]+>)*\{?[ \t\r\n]*$",
+)
 
 
 @dataclass(frozen=True)
@@ -52,21 +56,26 @@ class Hy3Client:
     ) -> GeneratedOutput:
         """根据当前模式生成并校验由工具拥有的叙事内容。"""
 
+        allowed_ids = tuple(allowed_source_ids)
         if self._settings.mode is Hy3Mode.DISABLED:
             raise Hy3DisabledError()
 
         if self._settings.mode is Hy3Mode.FIXTURE:
+            fixture_output = self._fixture_provider.load(tool_name)
+            if isinstance(fixture_output, dict) and "source_ids" in fixture_output:
+                # Fixture 只模拟叙事内容，来源引用必须绑定到本次真实检索结果。
+                fixture_output = {**fixture_output, "source_ids": list(allowed_ids)}
             parsed = validate_provider_output(
-                self._fixture_provider.load(tool_name),
+                fixture_output,
                 output_model,
-                allowed_source_ids=allowed_source_ids,
+                allowed_source_ids=allowed_ids,
             )
         else:
             parsed = await self._request_live(
                 messages=messages,
                 reasoning_effort=reasoning_effort,
                 output_model=output_model,
-                allowed_source_ids=allowed_source_ids,
+                allowed_source_ids=allowed_ids,
             )
         return GeneratedOutput(
             data=parsed.model_dump(mode="json"),
@@ -100,7 +109,7 @@ class Hy3Client:
                 reasoning_effort=reasoning_effort,
             )
             try:
-                raw_output = json.loads(raw_content)
+                raw_output = _decode_provider_output(raw_content)
                 return validate_provider_output(
                     raw_output,
                     output_model,
@@ -209,3 +218,29 @@ def _messages_with_output_schema(
         ),
     }
     return [schema_instruction, *messages]
+
+
+def _decode_provider_output(raw_content: str) -> Any:
+    """解析 JSON，并恢复 Hy3 已知的内部推理标签拼接缺陷。
+
+    恢复仅接受生产中观测到的单键对象形状；恢复结果仍须经过严格输出模型和
+    来源白名单校验，不能借此接受任意额外字段或未知来源。
+    """
+
+    decoded = json.loads(raw_content)
+    if not isinstance(decoded, dict) or len(decoded) != 1:
+        return decoded
+
+    malformed_key, malformed_value = next(iter(decoded.items()))
+    if not isinstance(malformed_key, str) or not isinstance(malformed_value, str):
+        return decoded
+
+    try:
+        recovered, end_index = json.JSONDecoder().raw_decode('{"' + malformed_key)
+    except json.JSONDecodeError:
+        return decoded
+
+    suffix = ('{"' + malformed_key)[end_index:]
+    if not isinstance(recovered, dict) or _THINK_WRAPPER_SUFFIX.fullmatch(suffix) is None:
+        return decoded
+    return recovered

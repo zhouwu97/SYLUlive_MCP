@@ -18,6 +18,11 @@ class CampusDocument:
     source_type: str
     official: bool
     effective_date: str | None
+    category: str
+    document_type: str
+    department: str
+    effective_to: str | None
+    section_title: str
     path: str
     text: str
 
@@ -31,6 +36,11 @@ class CampusDocument:
             "source_type": self.source_type,
             "official": self.official,
             "effective_date": self.effective_date,
+            "category": self.category,
+            "document_type": self.document_type,
+            "department": self.department,
+            "effective_to": self.effective_to,
+            "section_title": self.section_title,
         }
 
 

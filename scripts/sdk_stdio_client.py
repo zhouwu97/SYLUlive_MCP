@@ -58,7 +58,12 @@ async def verify_stdio_protocol() -> dict[str, Any]:
             for tool_name, arguments in calls.items():
                 response = await session.call_tool(tool_name, arguments)
                 if response.isError or response.structuredContent is None:
-                    raise RuntimeError(f"stdio 工具调用失败：{tool_name}")
+                    raise RuntimeError(
+                        f"stdio 工具调用失败：{tool_name}; "
+                        f"isError={response.isError}; "
+                        f"structuredContent={response.structuredContent!r}; "
+                        f"content={response.content!r}"
+                    )
                 if response.structuredContent.get("status") != "ok":
                     raise RuntimeError(f"stdio 工具返回错误：{tool_name}")
                 results[tool_name] = "ok"

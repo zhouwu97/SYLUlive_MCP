@@ -61,6 +61,5 @@ def test_status_declares_current_core_contract_hashes(tmp_path) -> None:
 
     assert status["contract_version"] == MCP_CONTRACT_VERSION
     assert status["tool_contracts"] == {
-        name: {"schema_sha256": contract.schema_sha256}
-        for name, contract in TOOL_CONTRACTS.items()
+        name: {"schema_sha256": contract.schema_sha256} for name, contract in TOOL_CONTRACTS.items()
     }

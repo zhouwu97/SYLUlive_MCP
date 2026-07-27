@@ -128,7 +128,9 @@ uv run hy3-campus-decision-mcp
 }
 ```
 
-`category` 可为 `policy`、`academic`、`competition` 或 `general`。返回的来源仅含
+`category` 可为 `policy`、`academic`、`competition` 或 `general`，检索会严格执行该过滤。
+政策查询加载 `examples/policy_bundle` 中固定 SHA 的 v0.8 Bundle，按 Markdown 章节切分，使用
+制度短语、章节标题和文档类型排序，不再使用单汉字重叠评分。返回的来源仅含
 `examples/campus_documents` 下的相对路径和 `source_id`。任何 `official: false` 的演示来源
 都会附带“这是演示文档，不代表学校现行正式政策。”警告。
 

@@ -57,9 +57,7 @@ def build_server(settings: Settings) -> Server:
 
     server = Server(SERVER_NAME, version=PACKAGE_VERSION)
     runtime = ToolRuntime(settings)
-    active_contracts = (
-        TOOL_CONTRACTS if settings.mode is not Hy3Mode.DISABLED else {}
-    )
+    active_contracts = TOOL_CONTRACTS if settings.mode is not Hy3Mode.DISABLED else {}
 
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:

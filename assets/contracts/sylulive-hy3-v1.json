@@ -2,7 +2,7 @@
   "contract_version": "sylulive-hy3/1",
   "tools": {
     "analyze_academic_snapshot": {
-      "schema_sha256": "11e52df593997543c584d3efc1e3b04e13d629a2cf33872adc1dad0223dc7759",
+      "schema_sha256": "0784c8d703113093229e97a005f51e7e80d87a952e803286bcca7359ae2c5988",
       "input_schema": {
         "$defs": {
           "AcademicSnapshot": {
@@ -441,6 +441,71 @@
                 ],
                 "default": null,
                 "title": "Effective Date"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "document_type": {
+                "anyOf": [
+                  {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Document Type"
+              },
+              "department": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Department"
+              },
+              "effective_to": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective To"
+              },
+              "section_title": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Section Title"
               }
             },
             "required": [
@@ -472,7 +537,7 @@
       }
     },
     "answer_campus_question": {
-      "schema_sha256": "8045d6e415e1b8f95906e31e60e25cfc250e311486549848820dbaf3c0b82da5",
+      "schema_sha256": "f36907266f1ee3a9303947c9afac43184b4f222831d6ad7113d4940c4de79ea1",
       "input_schema": {
         "additionalProperties": false,
         "description": "限定检索范围和可返回的本地证据数量。",
@@ -759,6 +824,71 @@
                 ],
                 "default": null,
                 "title": "Effective Date"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "document_type": {
+                "anyOf": [
+                  {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Document Type"
+              },
+              "department": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Department"
+              },
+              "effective_to": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective To"
+              },
+              "section_title": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Section Title"
               }
             },
             "required": [
@@ -790,7 +920,7 @@
       }
     },
     "compare_competitions": {
-      "schema_sha256": "d81ee88aa6c5fe6a879982f722980878fb66c311f448aa45aea7a0f241b42f1f",
+      "schema_sha256": "b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4",
       "input_schema": {
         "$defs": {
           "CompetitionCandidate": {
@@ -1383,6 +1513,71 @@
                 ],
                 "default": null,
                 "title": "Effective Date"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "document_type": {
+                "anyOf": [
+                  {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Document Type"
+              },
+              "department": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Department"
+              },
+              "effective_to": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective To"
+              },
+              "section_title": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Section Title"
               }
             },
             "required": [
@@ -1414,7 +1609,7 @@
       }
     },
     "plan_student_week": {
-      "schema_sha256": "4916c924e00f5e72d4bda9dfba0dc648ad15cff6b45f16fe5b715ada3684cb94",
+      "schema_sha256": "d3e2930561ed3f7c23923ffd18ca74373d86dcffd1db78a953566684ab8535fb",
       "input_schema": {
         "$defs": {
           "FixedEvent": {
@@ -1794,6 +1989,71 @@
                 ],
                 "default": null,
                 "title": "Effective Date"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "document_type": {
+                "anyOf": [
+                  {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Document Type"
+              },
+              "department": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Department"
+              },
+              "effective_to": {
+                "anyOf": [
+                  {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Effective To"
+              },
+              "section_title": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Section Title"
               }
             },
             "required": [

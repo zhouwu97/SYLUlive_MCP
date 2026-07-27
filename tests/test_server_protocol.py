@@ -42,6 +42,13 @@ async def test_stdio_initialize_list_and_call_tools() -> None:
             assert not response.isError
             assert response.structuredContent is not None
             assert response.structuredContent["status"] == "ok"
+            policy_response = await session.call_tool(
+                "answer_campus_question",
+                {"query": "创新创业学分如何认定？", "category": "policy"},
+            )
+            assert not policy_response.isError
+            assert policy_response.structuredContent is not None
+            assert policy_response.structuredContent["sources"][0]["document_type"]
             invalid_response = await session.call_tool(
                 "answer_campus_question",
                 {"query": "创新创业学分如何认定？", "unexpected": True},

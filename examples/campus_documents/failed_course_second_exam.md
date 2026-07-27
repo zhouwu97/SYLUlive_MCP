@@ -4,6 +4,9 @@ title: 挂科后的二次考试（补考）演示材料
 source_type: demonstration
 official: false
 effective_date: null
+category: policy
+document_type: school_makeup_exam_current_practice
+department: 示例教务处
 ---
 
 本演示材料说明课程首次考核不合格（学生口语常说“挂科”）之后，可能进入的二次考试环节。二次考试也称补考，一般由学校统一组织，用于给未取得学分的学生一次重新考核的机会。
