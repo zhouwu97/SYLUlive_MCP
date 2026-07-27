@@ -84,6 +84,7 @@ uvx --from "git+https://github.com/zhouwu97/SYLUlive_MCP.git@29e3ac903df6b691ddb
 - [Cursor 工作区配置](.cursor/mcp.json)
 - [CodeBuddy / VS Code 工作区配置](.vscode/mcp.json)
 - [可复制客户端配置](clients/)
+- [Cursor 与 CodeBuddy 原生调用证据](assets/client-verification.md)
 
 ```json
 {
