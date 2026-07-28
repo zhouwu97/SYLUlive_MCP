@@ -97,3 +97,23 @@
 
 本次后端部署使公开健康接口直接反映已验证 MCP Session 与实际 Go ToolRegistry，不再以
 `AI_EXTERNAL_MCP_ENABLED` 单独推导健康或工具数量。
+
+### 非破坏性故障矩阵
+
+| 场景 | 自动化结果 |
+| --- | --- |
+| 本地 MCP 包装器不存在 | `external_mcp_unavailable`，client 保持不健康 |
+| MCP Session 调用时断开 | 当前调用失败，后续调用重新握手成功 |
+| MCP 调用超时 | `external_mcp_timeout`，旧 Session 被清理 |
+| 生产工具 Schema 漂移 | 不兼容工具不进入 Go ToolRegistry |
+| MCP 工具返回超大或无效 JSON | Go 在 128 KiB 上限拒绝结果 |
+| Hy3 401 / 403 | `hy3_auth_failed` |
+| Hy3 429 | `hy3_rate_limited` |
+| Hy3 5xx | `hy3_upstream_unavailable` |
+| Hy3 超时 | `hy3_timeout`，错误不含 API Key |
+| Hy3 原始响应超过限制 | JSON 解析前以 `hy3_output_too_large` 拒绝 |
+| 周计划与课程冲突 | Go 本地确定性复核拒绝远端计划 |
+| 外部分析授权关闭 | 读取个人快照前停止，不调用远端工具 |
+
+以上结果来自隔离测试进程和 MockTransport，不会中断生产服务。独立预生产 systemd 实例上的
+真实 Provider 故障注入仍未执行，因此“真实端点故障注入”继续保持未验证。
