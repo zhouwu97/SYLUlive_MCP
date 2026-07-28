@@ -48,3 +48,21 @@
 远端后端审计时已设置 `AI_EXTERNAL_MCP_ENABLED=true`，早于本地候选版本部署。由于远端
 部署目录不可追溯到单一干净提交，且 portable 问答与真实故障注入仍未通过，本记录不构成
 全量生产验收。部署本地候选版本、复核三项生产工具并验证降级前，不应扩大流量。
+
+## 2026-07-28 13:58 UTC
+
+| 字段 | 记录值 |
+| --- | --- |
+| MCP 实现基线 | `765a5b634f18aaa616b3c424462572651c54b034` |
+| stdio 包装器 | LF 已验证；使用固定生产 Python 模块入口，不依赖可搬迁的 console-script shebang |
+| MCP 握手 | `initialize` 通过，协议版本 `2025-06-18` |
+| 工具注册 | 状态工具及三个生产工具已精确注册，无额外工具 |
+| MCP 状态 | `mode=live`、`tool_profile=sylulive_runtime`、`contract_version=sylulive-hy3/1` |
+| Go 启动健康检查 | 已通过，MCP 子进程由 Go 主进程持有 |
+| 后端健康检查 | `/health` 返回 200，AI runtime 已启用 |
+| 能力接口 | 路由存在；匿名请求按预期返回 401，登录态工具明细未在本次验证 |
+| 回滚点 | 启用前配置已备份，旧 MCP 部署目录仍保留 |
+
+本次启用仅确认生产 stdio 链路、契约注册和进程生命周期。portable 问答工具不属于
+`sylulive_runtime`，其 Live Schema 失败不影响本次三个生产工具的注册状态；真实故障注入和
+登录态业务入口仍需单独验收。
