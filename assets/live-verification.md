@@ -9,7 +9,7 @@
 | --- | --- |
 | SYLUlive `diaofenyuan` | `2efb524fb3090f877a8205dca63dd6200e745e8a` |
 | 远端 MCP 源码基线 | `0a2dafdfa3c41c06d31b727fb777707fa29a223e`，工作树存在未提交契约修改 |
-| 本地候选基线 | `70db618ac39e7c5f36cde16a9ce0ae0411a66882`，尚未部署 |
+| 本地候选基线 | `d6d29582d164c6f9aa5c24745d7ecae88ce9f343`，尚未部署 |
 | 契约版本 | `sylulive-hy3/1` |
 | Python 包版本 | `0.1.0` |
 | MCP SDK 版本 | `1.28.1` |
