@@ -157,6 +157,8 @@ analyze_academic_snapshot
 plan_student_week     d3e2930561ed3f7c23923ffd18ca74373d86dcffd1db78a953566684ab8535fb
 ```
 
+生产实现标签：`sylulive-mcp-prod-20260728`，精确指向上述 MCP 实现基线。
+
 ## 目录
 
 ```text

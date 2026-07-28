@@ -63,6 +63,24 @@
 | 能力接口 | 路由存在；匿名请求按预期返回 401，登录态工具明细未在本次验证 |
 | 回滚点 | 启用前配置已备份，旧 MCP 部署目录仍保留 |
 
+### 部署产物摘要
+
+服务器未从 wheel 安装，也未保留 Git 元数据。本次实际运行产物由 `fca990c` 源码归档和
+`765a5b6` 的 stdio 包装器修复组成；后者是两者之间唯一影响运行时的代码变更。
+
+| 产物 | SHA-256 |
+| --- | --- |
+| `sylulive-mcp-fca990c.tar.gz` | `88980d0ba99745e97683736e0bed7914da1149dbd1ffd235ba20f7ff637bf01e` |
+| 生产 `bin/run-stdio` | `8ad235494dca70e186f61c470d1971f734c898e68e27f59b2ce8d8bb6c422051` |
+| `assets/contracts/sylulive-hy3-v1.json` | `51668ddf302f47d0cd8b9f053088cf59ed2f5b4c5e242380d32299abfa0bc7d4` |
+| `assets/contracts/sylulive-mcp-v2.json` | `540e8aea7a3fb40f2d5d7f47f8dea6c0f12eea60ec48141056d9f5d57caafff8` |
+| `assets/contracts/sylulive-mcp-v3.json` | `07896383a5c9a491f4a4239a3bfdaf0e27e44460e143b24887926296d118ffec` |
+| `shenliyuan.service` | `897a109bc58c65233d29e2d5d1e4bd5ed0fcd52d578601fdb854732378649ca7` |
+| 脱敏外部 MCP 运行配置文件 | `2b1df86745779ad60cbb53912b8ca0a415dfe8930a81a4c09cc23c64cd23d989` |
+
+生产标签 `sylulive-mcp-prod-20260728` 精确指向 `765a5b6`。该标签固定运行时实现，后续
+验证记录提交不移动此标签。运行配置摘要仅用于检测服务器配置漂移，不公开配置内容。
+
 本次启用仅确认生产 stdio 链路、契约注册和进程生命周期。portable 问答工具不属于
 `sylulive_runtime`，其 Live Schema 失败不影响本次三个生产工具的注册状态；真实故障注入和
 登录态业务入口仍需单独验收。
