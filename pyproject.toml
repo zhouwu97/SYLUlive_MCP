@@ -22,6 +22,7 @@ dependencies = [
 
 [project.scripts]
 sylulive-mcp = "sylulive_mcp.__main__:main"
+hy3-campus-decision-mcp = "hy3_campus_decision_mcp.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -31,7 +32,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sylulive_mcp"]
+packages = ["src/sylulive_mcp", "src/hy3_campus_decision_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

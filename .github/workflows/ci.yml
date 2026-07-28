@@ -26,3 +26,4 @@ jobs:
       - run: uv run python scripts/selfcheck.py
       - run: uv run python scripts/sdk_stdio_client.py
       - run: uv run python scripts/sdk_streamable_http_client.py
+      - run: uv run python scripts/verify_sylulive_contract.py

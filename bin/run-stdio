@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+cd /opt/SYLUlive_MCP
+
+. /etc/sylulive-mcp/runtime.env
+
+exec env -i \
+  PATH=/opt/SYLUlive_MCP/.venv/bin:/usr/local/bin:/usr/bin:/bin \
+  HOME=/nonexistent \
+  LANG=C.UTF-8 \
+  LC_ALL=C.UTF-8 \
+  HY3_MODE="$HY3_MODE" \
+  HY3_TOOL_PROFILE="${HY3_TOOL_PROFILE:-sylulive_runtime}" \
+  HY3_API_BASE="$HY3_API_BASE" \
+  HY3_API_KEY="$HY3_API_KEY" \
+  HY3_MODEL="$HY3_MODEL" \
+  HY3_TIMEOUT_SECONDS="${HY3_TIMEOUT_SECONDS:-60}" \
+  HY3_MAX_INPUT_CHARS="${HY3_MAX_INPUT_CHARS:-30000}" \
+  HY3_MAX_OUTPUT_BYTES="${HY3_MAX_OUTPUT_BYTES:-131072}" \
+  HY3_LOG_LEVEL="${HY3_LOG_LEVEL:-INFO}" \
+  /opt/SYLUlive_MCP/.venv/bin/hy3-campus-decision-mcp

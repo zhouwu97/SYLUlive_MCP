@@ -124,6 +124,23 @@ uv run python scripts/sdk_streamable_http_client.py
 
 `scripts/selfcheck.py` 会启动真实 stdio 子进程，完成 initialize、tools/list 和核心 tools/call。stdout 专用于 MCP JSON-RPC，日志只写入 stderr。
 
+## diaofenyuan 内置 Runtime
+
+`diaofenyuan` 使用独立的 Hy3 契约入口 `hy3-campus-decision-mcp`。该入口返回
+`hy3_campus_status` 和三个固定决策工具，契约版本为 `sylulive-hy3/1`；便携问答工具
+只在默认的 `HY3_TOOL_PROFILE=portable` 中注册。生产 Go Runtime 应设置
+`HY3_TOOL_PROFILE=sylulive_runtime`，并通过 `/opt/SYLUlive_MCP/bin/run-stdio` 启动，
+避免把 Hy3 Key 放进仓库环境或命令行参数。
+
+部署前运行：
+
+```powershell
+uv run python scripts/verify_sylulive_contract.py
+```
+
+该检查会启动真实 Fixture 子进程，比较 `initialize`、`tools/list`、状态摘要和三个
+输入/输出 Schema 的 SHA-256；任何 Schema 漂移都会失败，而不会伪装成兼容。
+
 ## 目录
 
 ```text
