@@ -145,6 +145,18 @@ uv run python scripts/verify_sylulive_contract.py
 该检查会启动真实 Fixture 子进程，比较 `initialize`、`tools/list`、状态摘要和三个
 输入/输出 Schema 的 SHA-256；任何 Schema 漂移都会失败，而不会伪装成兼容。
 
+当前冻结兼容基线：
+
+```text
+SYLUlive/diaofenyuan  2efb524fb3090f877a8205dca63dd6200e745e8a
+SYLUlive_MCP          70db618ac39e7c5f36cde16a9ce0ae0411a66882
+contract_version      sylulive-hy3/1
+compare_competitions  b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4
+analyze_academic_snapshot
+                      0784c8d703113093229e97a005f51e7e80d87a952e803286bcca7359ae2c5988
+plan_student_week     d3e2930561ed3f7c23923ffd18ca74373d86dcffd1db78a953566684ab8535fb
+```
+
 ## 目录
 
 ```text
