@@ -149,7 +149,7 @@ uv run python scripts/verify_sylulive_contract.py
 
 ```text
 SYLUlive/diaofenyuan  2efb524fb3090f877a8205dca63dd6200e745e8a
-SYLUlive_MCP          72f3c405c6ba32e2210ba31a99a738a100f0d850
+SYLUlive_MCP          765a5b634f18aaa616b3c424462572651c54b034
 contract_version      sylulive-hy3/1
 compare_competitions  b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4
 analyze_academic_snapshot
