@@ -12,9 +12,12 @@ from typing import Any, Literal, TypeVar
 import httpx
 from pydantic import BaseModel
 
-from ..config import Hy3Mode, Settings
+from ..config import Hy3Mode, Hy3Protocol, Settings
 from ..errors import Hy3ConfigurationError, Hy3DisabledError, Hy3ProviderError
-from ..safety.endpoint_policy import normalize_hy3_endpoint
+from ..safety.endpoint_policy import (
+    normalize_anthropic_messages_endpoint,
+    normalize_hy3_endpoint,
+)
 from .fixture_provider import FixtureProvider
 from .output_validation import validate_provider_output
 
@@ -98,18 +101,30 @@ class Hy3Client:
                 "hy3_api_key_missing",
                 "HY3_API_KEY is required when HY3_MODE=live.",
             )
-        endpoint = normalize_hy3_endpoint(
-            self._settings.api_base,
-            allow_private_http=self._settings.allow_private_http,
-        )
+        if self._settings.protocol is Hy3Protocol.ANTHROPIC_MESSAGES:
+            endpoint = normalize_anthropic_messages_endpoint(
+                self._settings.api_base,
+                allow_private_http=self._settings.allow_private_http,
+            )
+        else:
+            endpoint = normalize_hy3_endpoint(
+                self._settings.api_base,
+                allow_private_http=self._settings.allow_private_http,
+            )
         request_messages = _messages_with_output_schema(messages, output_model)
         for attempt in range(2):
             try:
-                raw_content = await self._post_completion(
-                    endpoint=endpoint,
-                    messages=request_messages,
-                    reasoning_effort=reasoning_effort,
-                )
+                if self._settings.protocol is Hy3Protocol.ANTHROPIC_MESSAGES:
+                    raw_content = await self._post_anthropic_message(
+                        endpoint=endpoint,
+                        messages=request_messages,
+                    )
+                else:
+                    raw_content = await self._post_completion(
+                        endpoint=endpoint,
+                        messages=request_messages,
+                        reasoning_effort=reasoning_effort,
+                    )
             except Hy3ProviderError as error:
                 if attempt == 1 or error.code not in {
                     "hy3_rate_limited",
@@ -178,6 +193,74 @@ class Hy3Client:
             "Authorization": f"Bearer {self._settings.api_key.get_secret_value()}",
             "Content-Type": "application/json",
         }
+        decoded = await self._post_json(endpoint=endpoint, payload=payload, headers=headers)
+        try:
+            content = decoded["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as error:
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 returned an unsupported response envelope.",
+            ) from error
+        if not isinstance(content, str):
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 did not return text JSON content.",
+            )
+        return content
+
+    async def _post_anthropic_message(
+        self,
+        *,
+        endpoint: str,
+        messages: list[dict[str, str]],
+    ) -> str:
+        """调用 Anthropic Messages API，并仅提取文本内容块。"""
+
+        system_messages = [
+            message["content"] for message in messages if message["role"] == "system"
+        ]
+        conversation = [message for message in messages if message["role"] != "system"]
+        payload = {
+            "model": self._settings.model_name,
+            "max_tokens": self._settings.max_output_tokens,
+            "temperature": self._settings.default_temperature,
+            "system": "\n\n".join(system_messages),
+            "messages": conversation,
+        }
+        headers = {
+            "x-api-key": self._settings.api_key.get_secret_value(),
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+        }
+        decoded = await self._post_json(endpoint=endpoint, payload=payload, headers=headers)
+        try:
+            blocks = decoded["content"]
+            content = "".join(
+                block["text"]
+                for block in blocks
+                if isinstance(block, dict) and block.get("type") == "text"
+            )
+        except (KeyError, TypeError) as error:
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 returned an unsupported response envelope.",
+            ) from error
+        if not content:
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 did not return text JSON content.",
+            )
+        return content
+
+    async def _post_json(
+        self,
+        *,
+        endpoint: str,
+        payload: dict[str, Any],
+        headers: dict[str, str],
+    ) -> dict[str, Any]:
+        """流式读取受限 JSON 响应，并统一映射两种 Provider 协议错误。"""
+
         try:
             async with httpx.AsyncClient(
                 timeout=self._settings.timeout_seconds,
@@ -226,43 +309,28 @@ class Hy3Client:
                                 "Hy3 response exceeded the configured size limit.",
                             )
                         chunks.append(chunk)
-            try:
-                decoded = json.loads(b"".join(chunks))
-            except (UnicodeDecodeError, json.JSONDecodeError) as error:
-                raise Hy3ProviderError(
-                    "hy3_output_invalid",
-                    "Hy3 returned an unsupported response envelope.",
-                ) from error
-            try:
-                content = decoded["choices"][0]["message"]["content"]
-            except (KeyError, IndexError, TypeError) as error:
-                raise Hy3ProviderError(
-                    "hy3_output_invalid",
-                    "Hy3 returned an unsupported response envelope.",
-                ) from error
         except Hy3ProviderError:
             raise
         except httpx.TimeoutException as error:
-            raise Hy3ProviderError(
-                "hy3_timeout",
-                "Hy3 request timed out.",
-            ) from error
-        except httpx.NetworkError as error:
-            raise Hy3ProviderError(
-                "hy3_connection_failed",
-                "Hy3 connection failed.",
-            ) from error
+            raise Hy3ProviderError("hy3_timeout", "Hy3 request timed out.") from error
+        except httpx.RequestError as error:
+            raise Hy3ProviderError("hy3_connection_failed", "Hy3 connection failed.") from error
         except httpx.HTTPStatusError as error:
-            raise Hy3ProviderError(
-                "hy3_request_failed",
-                "Hy3 rejected the request.",
-            ) from error
-        if not isinstance(content, str):
+            raise Hy3ProviderError("hy3_request_failed", "Hy3 rejected the request.") from error
+
+        try:
+            decoded = json.loads(b"".join(chunks))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise Hy3ProviderError(
                 "hy3_output_invalid",
-                "Hy3 did not return text JSON content.",
+                "Hy3 returned an unsupported response envelope.",
+            ) from error
+        if not isinstance(decoded, dict):
+            raise Hy3ProviderError(
+                "hy3_output_invalid",
+                "Hy3 returned an unsupported response envelope.",
             )
-        return content
+        return decoded
 
 
 def _messages_with_output_schema(

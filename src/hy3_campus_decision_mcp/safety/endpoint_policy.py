@@ -1,4 +1,4 @@
-"""兼容 OpenAI 的 Hy3 端点规范化与安全检查。"""
+"""Hy3 Live Provider 端点规范化与安全检查。"""
 
 from __future__ import annotations
 
@@ -24,8 +24,13 @@ def _is_allowed_http_host(host: str, allow_private_http: bool) -> bool:
     )
 
 
-def normalize_hy3_endpoint(raw_base: str, *, allow_private_http: bool) -> str:
-    """从安全基址生成唯一的 `/v1/chat/completions` 端点。"""
+def _normalize_hy3_endpoint(
+    raw_base: str,
+    *,
+    allow_private_http: bool,
+    resource_path: str,
+) -> str:
+    """从安全基址生成唯一的 `/v1` Provider 资源端点。"""
 
     raw_base = raw_base.strip()
     parsed = urlsplit(raw_base)
@@ -62,9 +67,31 @@ def normalize_hy3_endpoint(raw_base: str, *, allow_private_http: bool) -> str:
         )
 
     path = parsed.path.rstrip("/")
-    if path.endswith("/chat/completions"):
-        path = path[: -len("/chat/completions")].rstrip("/")
+    for known_resource in ("/chat/completions", "/messages"):
+        if path.endswith(known_resource):
+            path = path[: -len(known_resource)].rstrip("/")
+            break
     if not path.endswith("/v1"):
         path = f"{path}/v1" if path else "/v1"
-    final_path = f"{path}/chat/completions"
+    final_path = f"{path}{resource_path}"
     return urlunsplit((parsed.scheme, parsed.netloc, final_path, "", ""))
+
+
+def normalize_hy3_endpoint(raw_base: str, *, allow_private_http: bool) -> str:
+    """从安全基址生成唯一的 OpenAI chat-completions 端点。"""
+
+    return _normalize_hy3_endpoint(
+        raw_base,
+        allow_private_http=allow_private_http,
+        resource_path="/chat/completions",
+    )
+
+
+def normalize_anthropic_messages_endpoint(raw_base: str, *, allow_private_http: bool) -> str:
+    """从安全基址生成唯一的 Anthropic Messages 端点。"""
+
+    return _normalize_hy3_endpoint(
+        raw_base,
+        allow_private_http=allow_private_http,
+        resource_path="/messages",
+    )

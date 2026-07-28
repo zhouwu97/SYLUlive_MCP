@@ -17,6 +17,13 @@ class Hy3Mode(StrEnum):
     DISABLED = "disabled"
 
 
+class Hy3Protocol(StrEnum):
+    """Live Provider 支持的安全协议适配器。"""
+
+    OPENAI_CHAT_COMPLETIONS = "openai_chat_completions"
+    ANTHROPIC_MESSAGES = "anthropic_messages"
+
+
 class ToolProfile(StrEnum):
     """决定是否向独立 SYLUlive Runtime 暴露便携问答工具。"""
 
@@ -50,6 +57,10 @@ class Settings(BaseSettings):
         default_factory=lambda: SecretStr(""),
         validation_alias=AliasChoices("HY3_API_KEY", "api_key"),
     )
+    protocol: Hy3Protocol = Field(
+        default=Hy3Protocol.OPENAI_CHAT_COMPLETIONS,
+        validation_alias=AliasChoices("HY3_API_PROTOCOL", "protocol"),
+    )
     model_name: str = Field(
         default="hy3",
         validation_alias=AliasChoices("HY3_MODEL", "model_name"),
@@ -59,6 +70,12 @@ class Settings(BaseSettings):
         gt=0,
         le=300,
         validation_alias=AliasChoices("HY3_TIMEOUT_SECONDS", "timeout_seconds"),
+    )
+    max_output_tokens: int = Field(
+        default=2_048,
+        ge=1,
+        le=8_192,
+        validation_alias=AliasChoices("HY3_MAX_OUTPUT_TOKENS", "max_output_tokens"),
     )
     campus_root: Path = Field(
         default=Path("examples"),

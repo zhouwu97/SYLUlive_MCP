@@ -132,6 +132,10 @@ uv run python scripts/sdk_streamable_http_client.py
 `HY3_TOOL_PROFILE=sylulive_runtime`，并通过 `/opt/SYLUlive_MCP/bin/run-stdio` 启动，
 避免把 Hy3 Key 放进仓库环境或命令行参数。
 
+Live Provider 支持 `HY3_API_PROTOCOL=openai_chat_completions` 和
+`HY3_API_PROTOCOL=anthropic_messages`。两种协议共享认证、限流、超时、上游故障和连接
+错误分类，并在 JSON 解析前执行 `HY3_MAX_OUTPUT_BYTES` 流式字节限制。
+
 部署前运行：
 
 ```powershell
