@@ -21,4 +21,4 @@ exec env -i \
   HY3_MAX_INPUT_CHARS="${HY3_MAX_INPUT_CHARS:-30000}" \
   HY3_MAX_OUTPUT_BYTES="${HY3_MAX_OUTPUT_BYTES:-131072}" \
   HY3_LOG_LEVEL="${HY3_LOG_LEVEL:-INFO}" \
-  /opt/SYLUlive_MCP/.venv/bin/hy3-campus-decision-mcp
+  /opt/SYLUlive_MCP/.venv/bin/python -m hy3_campus_decision_mcp
