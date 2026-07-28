@@ -84,3 +84,16 @@
 本次启用仅确认生产 stdio 链路、契约注册和进程生命周期。portable 问答工具不属于
 `sylulive_runtime`，其 Live Schema 失败不影响本次三个生产工具的注册状态；真实故障注入和
 登录态业务入口仍需单独验收。
+
+## 2026-07-28 14:38 UTC
+
+| 字段 | 记录值 |
+| --- | --- |
+| SYLUlive `diaofenyuan` 实现 | `51f41de8cbf3f6761ddbdfc96b781ad3f6a65549` |
+| Go 1.25 Linux/amd64 二进制 SHA-256 | `5040ffd609c98babe1d281e38838ef212f2fee52b6b851b924b67a1f8b409440` |
+| MCP 生产标签 | `sylulive-mcp-prod-20260728`，指向 `765a5b634f18aaa616b3c424462572651c54b034` |
+| `/health` 外部 MCP 状态 | configured、healthy，Live 模式，契约 `sylulive-hy3/1`，三个工具 |
+| 登录态 capabilities | 匿名 401 已验证；登录态工具明细待专用测试账号验证 |
+
+本次后端部署使公开健康接口直接反映已验证 MCP Session 与实际 Go ToolRegistry，不再以
+`AI_EXTERNAL_MCP_ENABLED` 单独推导健康或工具数量。

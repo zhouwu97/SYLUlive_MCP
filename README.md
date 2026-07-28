@@ -148,7 +148,7 @@ uv run python scripts/verify_sylulive_contract.py
 当前冻结兼容基线：
 
 ```text
-SYLUlive/diaofenyuan  2efb524fb3090f877a8205dca63dd6200e745e8a
+SYLUlive/diaofenyuan  51f41de8cbf3f6761ddbdfc96b781ad3f6a65549
 SYLUlive_MCP          765a5b634f18aaa616b3c424462572651c54b034
 contract_version      sylulive-hy3/1
 compare_competitions  b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4
