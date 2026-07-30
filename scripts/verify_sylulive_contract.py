@@ -54,7 +54,7 @@ async def verify_contract() -> dict[str, Any]:
             if status_response.isError or status_response.structuredContent is None:
                 raise RuntimeError("状态工具返回错误或缺少结构化内容")
             status = status_response.structuredContent
-            if status.get("contract_version") != "sylulive-hy3/1":
+            if status.get("contract_version") != "sylulive-hy3/2":
                 raise RuntimeError("状态工具契约版本不匹配")
             if status.get("available_tools") != [STATUS_TOOL_NAME, *SYLULIVE_RUNTIME_TOOL_NAMES]:
                 raise RuntimeError("状态工具的 available_tools 与 tools/list 不一致")
@@ -71,6 +71,57 @@ async def verify_contract() -> dict[str, Any]:
                         f"implementation={implementation}, fixed={fixed}, reported={reported}"
                     )
 
+            user_context = {
+                "profile_version": "a" * 64,
+                "grade": "本科三年级",
+                "college": "信息学院",
+                "major": "软件工程",
+                "goals": ["能力提升"],
+                "direction_tags": ["程序设计"],
+                "skills": [],
+                "roles": [],
+                "preferred_roles": ["developer"],
+                "weekly_hours": 7,
+                "accept_long_term_training": False,
+                "career_direction": "",
+                "experience_level": "beginner",
+            }
+            candidates = [
+                {
+                    "competition_id": competition_id,
+                    "record_hash": f"{order:x}" * 64,
+                    "group_key": "major_match",
+                    "rule_order": order,
+                    "facts": {
+                        "competition_rating": "A",
+                        "major_fit_summary_public": "适配软件相关专业",
+                        "risk_tags": ["long_term_training"],
+                    },
+                    "match_dimensions": {
+                        key: "matched" if key in {"eligibility", "major"} else "unknown"
+                        for key in (
+                            "eligibility",
+                            "major",
+                            "college",
+                            "grade",
+                            "goal",
+                            "direction",
+                            "skill",
+                            "role",
+                            "time",
+                            "training",
+                        )
+                    },
+                    "gates": {
+                        "candidate_pool_allowed": True,
+                        "personalized_ranking_allowed": False,
+                        "strong_recommendation_eligible": False,
+                        "recommendation_permission_level": "low",
+                        "ai_mode": "candidate_explanation",
+                    },
+                }
+                for competition_id, order in (("NAT-001", 1), ("NAT-002", 2))
+            ]
             calls = {
                 "compare_competitions": {
                     "student_profile": {
@@ -82,6 +133,17 @@ async def verify_contract() -> dict[str, Any]:
                         {"name": "测试赛事一", "difficulty": "low"},
                         {"name": "测试赛事二", "difficulty": "medium"},
                     ],
+                },
+                "explain_competition_candidates": {
+                    "mode": "candidate_explanation",
+                    "question": "我每周可以投入七小时",
+                    "user_context": user_context,
+                    "candidates": candidates,
+                },
+                "compare_selected_competitions": {
+                    "mode": "selected_comparison",
+                    "user_context": user_context,
+                    "competitions": candidates,
                 },
                 "analyze_academic_snapshot": {
                     "snapshot_path": "academic/safe_snapshot.json",
@@ -100,7 +162,7 @@ async def verify_contract() -> dict[str, Any]:
                     raise RuntimeError(f"Fixture 工具返回错误: {name}")
     return {
         "status": "ok",
-        "contract_version": "sylulive-hy3/1",
+        "contract_version": "sylulive-hy3/2",
         "digests": actual,
         "fixture_calls": sorted(calls),
     }

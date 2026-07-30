@@ -8,8 +8,12 @@ import httpx
 
 from sylulive_mcp.config import ServiceMode, Settings
 from sylulive_mcp.tools.competition_compare_facts import competition_compare_facts
+from sylulive_mcp.tools.competition_get_candidate_context import (
+    competition_get_candidate_context,
+)
 from sylulive_mcp.tools.competition_get_details import competition_get_details
 from sylulive_mcp.tools.competition_search import competition_search
+from sylulive_mcp.tools.competition_verify_records import competition_verify_records
 from sylulive_mcp.tools.runtime import ToolRuntime
 
 
@@ -91,3 +95,100 @@ async def test_production_comparison_accepts_only_ids_and_returns_go_facts() -> 
         "available_weekly_hours": 6,
     }
     assert rejected["code"] == "invalid_input"
+
+
+async def test_candidate_context_and_record_verification_use_go_as_authority() -> None:
+    paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        paths.append(request.url.path)
+        if request.url.path.endswith("/candidate-context"):
+            return httpx.Response(
+                200,
+                json={
+                    "status": "ok",
+                    "candidates": [
+                        {
+                            "competition_id": "NAT-006",
+                            "record_hash": "a" * 64,
+                            "dataset_version": "catalog-v1",
+                            "facts": {
+                                "title": "程序设计竞赛",
+                                "competition_level": "国家级",
+                                "school_recognition_status": "recognized",
+                                "school_recognition_grade": "B+",
+                                "competition_rating": "A",
+                                "participation_type": "团队赛",
+                                "team_size_min": 3,
+                                "team_size_max": 3,
+                                "registration_time_text": "",
+                                "event_time_text": "",
+                                "time_status": "pending",
+                                "major_fit_summary_public": "适配软件相关专业",
+                                "evidence_summary_public": "公开通知已核验",
+                                "evidence_subgrade": "A2",
+                            },
+                            "match_dimensions": {
+                                key: "unknown"
+                                for key in (
+                                    "eligibility",
+                                    "major",
+                                    "college",
+                                    "grade",
+                                    "goal",
+                                    "direction",
+                                    "skill",
+                                    "role",
+                                    "time",
+                                    "training",
+                                )
+                            },
+                            "risk_tags": ["long_term_training"],
+                            "gates": {
+                                "candidate_pool_allowed": True,
+                                "personalized_ranking_allowed": False,
+                                "strong_recommendation_eligible": False,
+                                "recommendation_permission_level": "low",
+                                "ai_mode": "candidate_explanation",
+                            },
+                        }
+                    ],
+                    "missing_competition_ids": [],
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "status": "ok",
+                "records": [
+                    {
+                        "competition_id": "NAT-006",
+                        "record_hash": "b" * 64,
+                        "valid": False,
+                        "reason": "record_hash_changed",
+                        "ai_mode": "candidate_explanation",
+                    }
+                ],
+            },
+        )
+
+    settings = Settings(mode=ServiceMode.PRODUCTION, api_base="https://internal.example")
+    runtime = ToolRuntime(settings, api_transport=httpx.MockTransport(handler))
+    try:
+        with runtime.grants.bind("competition-grant"):
+            context = await competition_get_candidate_context(
+                runtime, {"competition_ids": ["NAT-006"]}
+            )
+            verified = await competition_verify_records(
+                runtime,
+                {"records": [{"competition_id": "NAT-006", "record_hash": "a" * 64}]},
+            )
+    finally:
+        await runtime.aclose()
+
+    assert context["candidates"][0]["gates"]["personalized_ranking_allowed"] is False
+    assert verified["records"][0]["reason"] == "record_hash_changed"
+    assert paths == [
+        "/internal/mcp/competition/candidate-context",
+        "/internal/mcp/competition/verify-records",
+    ]

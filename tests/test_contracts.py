@@ -14,7 +14,7 @@ from sylulive_mcp.contracts import (
 
 
 def test_tool_registries_separate_production_and_demo_inputs() -> None:
-    assert MCP_CONTRACT_VERSION == "sylulive-mcp/3"
+    assert MCP_CONTRACT_VERSION == "sylulive-mcp/4"
     assert tuple(PRODUCTION_TOOL_CONTRACTS) == CORE_TOOL_NAMES
     assert tuple(DEMO_TOOL_CONTRACTS) == DEMO_TOOL_NAMES
     assert "answer_campus_question" not in PRODUCTION_TOOL_CONTRACTS
@@ -32,6 +32,12 @@ def test_tool_registries_separate_production_and_demo_inputs() -> None:
     assert "schedule" not in schedule_properties
     assert "schedule_path" not in schedule_properties
     assert set(compare_properties) == {"competition_ids", "available_weekly_hours"}
+    assert set(
+        PRODUCTION_TOOL_CONTRACTS["competition_get_candidate_context"].input_schema["properties"]
+    ) == {"competition_ids"}
+    assert set(
+        PRODUCTION_TOOL_CONTRACTS["competition_verify_records"].input_schema["properties"]
+    ) == {"records"}
 
 
 def test_contracts_publish_strict_object_schemas() -> None:

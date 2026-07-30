@@ -1,0 +1,32 @@
+{
+  "summary": "两项赛事在认定、训练投入和团队要求上各有不同。",
+  "items": [
+    {
+      "competition_id": "NAT-001",
+      "observations": [
+        {
+          "text": "赛事价值与证据摘要均有公开依据",
+          "source_fields": ["competition_rating", "evidence_summary_public"]
+        }
+      ],
+      "cautions": [
+        {
+          "text": "需要确认团队稳定性",
+          "source_fields": ["risk_tags"]
+        }
+      ],
+      "questions_to_confirm": []
+    },
+    {
+      "competition_id": "NAT-002",
+      "observations": [
+        {
+          "text": "学校认定状态可直接比较",
+          "source_fields": ["school_recognition_status"]
+        }
+      ],
+      "cautions": [],
+      "questions_to_confirm": ["训练投入待确认"]
+    }
+  ]
+}

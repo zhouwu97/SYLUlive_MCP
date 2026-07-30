@@ -1,0 +1,34 @@
+{
+  "summary": "当前候选分别覆盖软件实践与团队协作方向。",
+  "items": [
+    {
+      "competition_id": "NAT-001",
+      "core_reason": "与你的专业方向相关",
+      "reasons": [
+        {
+          "text": "公开专业适配摘要支持该关联",
+          "source_fields": ["major_fit_summary_public"]
+        }
+      ],
+      "cautions": [
+        {
+          "text": "通常需要持续训练",
+          "source_fields": ["risk_tags"]
+        }
+      ],
+      "questions_to_confirm": ["当届报名时间待确认"]
+    },
+    {
+      "competition_id": "NAT-002",
+      "core_reason": "符合当前参赛资格",
+      "reasons": [
+        {
+          "text": "规则匹配维度显示资格已匹配",
+          "source_fields": ["match_dimensions"]
+        }
+      ],
+      "cautions": [],
+      "questions_to_confirm": []
+    }
+  ]
+}

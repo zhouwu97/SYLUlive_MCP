@@ -11,7 +11,7 @@ def test_status_contract_version_and_hashes() -> None:
     """Go 校验所需字段必须稳定且脱敏。"""
 
     status = build_status(Settings(mode=Hy3Mode.FIXTURE, tool_profile=ToolProfile.SYLULIVE_RUNTIME))
-    assert status["contract_version"] == "sylulive-hy3/1"
+    assert status["contract_version"] == "sylulive-hy3/2"
     assert status["tool_contracts"] == PINNED_TOOL_CONTRACTS
     assert status["mode"] == "fixture"
     assert "test-key" not in str(status)

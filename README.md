@@ -110,7 +110,7 @@ Go 在接受 Agent 的结构化回答前仍必须验证：
 
 ## 契约与验证
 
-契约版本为 `sylulive-mcp/3`，版本化清单位于 `assets/contracts/sylulive-mcp-v3.json`。
+契约版本为 `sylulive-mcp/4`，版本化清单位于 `assets/contracts/sylulive-mcp-v4.json`。
 清单分别记录 production 与 demo 注册表，默认集成应使用 production 契约。
 
 ```powershell
@@ -127,7 +127,7 @@ uv run python scripts/sdk_streamable_http_client.py
 ## diaofenyuan 内置 Runtime
 
 `diaofenyuan` 使用独立的 Hy3 契约入口 `hy3-campus-decision-mcp`。该入口返回
-`hy3_campus_status` 和三个固定决策工具，契约版本为 `sylulive-hy3/1`；便携问答工具
+`hy3_campus_status` 和五个固定决策工具，契约版本为 `sylulive-hy3/2`；便携问答工具
 只在默认的 `HY3_TOOL_PROFILE=portable` 中注册。生产 Go Runtime 应设置
 `HY3_TOOL_PROFILE=sylulive_runtime`，并通过 `/opt/SYLUlive_MCP/bin/run-stdio` 启动，
 避免把 Hy3 Key 放进仓库环境或命令行参数。
@@ -142,22 +142,24 @@ Live Provider 支持 `HY3_API_PROTOCOL=openai_chat_completions` 和
 uv run python scripts/verify_sylulive_contract.py
 ```
 
-该检查会启动真实 Fixture 子进程，比较 `initialize`、`tools/list`、状态摘要和三个
+该检查会启动真实 Fixture 子进程，比较 `initialize`、`tools/list`、状态摘要和五个
 输入/输出 Schema 的 SHA-256；任何 Schema 漂移都会失败，而不会伪装成兼容。
 
 当前冻结兼容基线：
 
 ```text
-SYLUlive/diaofenyuan  51f41de8cbf3f6761ddbdfc96b781ad3f6a65549
-SYLUlive_MCP          765a5b634f18aaa616b3c424462572651c54b034
-contract_version      sylulive-hy3/1
-compare_competitions  b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4
+contract_version      sylulive-hy3/2
+compare_competitions  183668200d82156e6385342d747d229e5ab8fe49ba4351afaf8fccc9c896905c
+explain_competition_candidates
+                      869bed351400771f7272b5c05b97d2c20875c7ddff0db65cb9d064b5c1f84721
+compare_selected_competitions
+                      b8e151f2e964f96dcbc5d533632da63f5adf9b7106f681d861edb7f05cc0b463
 analyze_academic_snapshot
-                      0784c8d703113093229e97a005f51e7e80d87a952e803286bcca7359ae2c5988
-plan_student_week     d3e2930561ed3f7c23923ffd18ca74373d86dcffd1db78a953566684ab8535fb
+                      fc50ff6b196c409d59df53df777f49b265fd4bfa66e34969e5787527a38fad23
+plan_student_week     0cb4a9c774ea6799b8f95945d89c21195c0cb228315ab73fd849259814cc7518
 ```
 
-生产实现标签：`sylulive-mcp-prod-20260728`，精确指向上述 MCP 实现基线。
+生产实现标签和提交基线必须以对应部署记录为准，不由 README 推断。
 
 ## 目录
 

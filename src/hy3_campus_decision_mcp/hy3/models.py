@@ -28,6 +28,36 @@ class CompetitionOutput(StrictOutputModel):
     considerations: list[str] = Field(default_factory=list, max_length=20)
 
 
+class CompetitionExplanationReason(StrictOutputModel):
+    text: str = Field(min_length=1, max_length=1_000)
+    source_fields: list[str] = Field(min_length=1, max_length=10)
+
+
+class CompetitionExplanationItem(StrictOutputModel):
+    competition_id: str = Field(min_length=1, max_length=64)
+    core_reason: str = Field(min_length=1, max_length=1_000)
+    reasons: list[CompetitionExplanationReason] = Field(default_factory=list, max_length=10)
+    cautions: list[CompetitionExplanationReason] = Field(default_factory=list, max_length=10)
+    questions_to_confirm: list[str] = Field(default_factory=list, max_length=10)
+
+
+class CompetitionCandidateExplanationOutput(StrictOutputModel):
+    summary: str = Field(min_length=1, max_length=2_000)
+    items: list[CompetitionExplanationItem] = Field(min_length=1, max_length=20)
+
+
+class SelectedCompetitionComparisonItem(StrictOutputModel):
+    competition_id: str = Field(min_length=1, max_length=64)
+    observations: list[CompetitionExplanationReason] = Field(min_length=1, max_length=20)
+    cautions: list[CompetitionExplanationReason] = Field(default_factory=list, max_length=10)
+    questions_to_confirm: list[str] = Field(default_factory=list, max_length=10)
+
+
+class SelectedCompetitionComparisonOutput(StrictOutputModel):
+    summary: str = Field(min_length=1, max_length=2_000)
+    items: list[SelectedCompetitionComparisonItem] = Field(min_length=2, max_length=4)
+
+
 class AcademicOutput(StrictOutputModel):
     """对本地计算出的学业结论进行叙事解释。"""
 

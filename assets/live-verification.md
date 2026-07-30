@@ -117,3 +117,36 @@
 
 以上结果来自隔离测试进程和 MockTransport，不会中断生产服务。独立预生产 systemd 实例上的
 真实 Provider 故障注入仍未执行，因此“真实端点故障注入”继续保持未验证。
+
+## 2026-07-30 本地部署前门禁
+
+本节只记录隔离工作树的本地验证，不表示新契约已经部署到生产。
+
+| 字段 | 记录值 |
+| --- | --- |
+| 纯工具契约 | `sylulive-mcp/4` |
+| 纯工具包版本 | `0.4.0` |
+| Hy3 契约 | `sylulive-hy3/2` |
+| Hy3 包版本 | `0.2.0` |
+| Python 测试 | `62 passed` |
+| Ruff | format 与 lint 均通过 |
+| Fixture stdio | 五个生产工具逐项调用通过 |
+| `sylulive-mcp-v4.json` | `28f3ca1b43a61c6a00fcca65d0b7beb5d7cbf07ea8070177aac7c6993b019ed5` |
+| `sylulive-hy3-v2.json` | `e0afd2958c097c255933c1ac826e81dc75fe30ac7ccd9039cbb2a49916a4042a` |
+
+Hy3 五个固定工具及 Schema SHA-256：
+
+```text
+compare_competitions
+  183668200d82156e6385342d747d229e5ab8fe49ba4351afaf8fccc9c896905c
+explain_competition_candidates
+  869bed351400771f7272b5c05b97d2c20875c7ddff0db65cb9d064b5c1f84721
+compare_selected_competitions
+  b8e151f2e964f96dcbc5d533632da63f5adf9b7106f681d861edb7f05cc0b463
+analyze_academic_snapshot
+  fc50ff6b196c409d59df53df777f49b265fd4bfa66e34969e5787527a38fad23
+plan_student_week
+  0cb4a9c774ea6799b8f95945d89c21195c0cb228315ab73fd849259814cc7518
+```
+
+生产部署仍需重新验证服务器上的提交、包装器、健康状态、工具注册和 Go 固定摘要。

@@ -18,12 +18,16 @@ from .schemas.tools import (
     AcademicGetSummaryInput,
     AcademicGetSummarySuccess,
     AcademicSummarySuccess,
+    CompetitionCandidateContextInput,
+    CompetitionCandidateContextSuccess,
     CompetitionCompareFactsInput,
     CompetitionCompareSuccess,
     CompetitionDetailsSuccess,
     CompetitionGetDetailsInput,
     CompetitionSearchInput,
     CompetitionSearchSuccess,
+    CompetitionVerifyRecordsInput,
+    CompetitionVerifyRecordsSuccess,
     DemoCompetitionCompareFactsInput,
     DemoFindFreeWindowsInput,
     DemoValidatePlanInput,
@@ -40,8 +44,10 @@ from .tools import (
     academic_calculate_summary,
     academic_get_summary,
     competition_compare_facts,
+    competition_get_candidate_context,
     competition_get_details,
     competition_search,
+    competition_verify_records,
     policy_get_sources,
     policy_search,
     schedule_find_free_windows,
@@ -120,6 +126,20 @@ _SHARED_TOOL_CONTRACTS: dict[str, ToolContract] = {
         CompetitionGetDetailsInput,
         response_type(CompetitionDetailsSuccess),
         competition_get_details,
+    ),
+    "competition_get_candidate_context": ToolContract(
+        "competition_get_candidate_context",
+        "按稳定标识读取 Go 已批准候选的公开解释上下文、记录摘要与权限门。",
+        CompetitionCandidateContextInput,
+        response_type(CompetitionCandidateContextSuccess),
+        competition_get_candidate_context,
+    ),
+    "competition_verify_records": ToolContract(
+        "competition_verify_records",
+        "复核候选记录仍发布、仍允许进入候选池且记录摘要未变化。",
+        CompetitionVerifyRecordsInput,
+        response_type(CompetitionVerifyRecordsSuccess),
+        competition_verify_records,
     ),
 }
 
@@ -257,4 +277,4 @@ def build_contract_manifest() -> dict[str, Any]:
 def committed_manifest_path() -> Path:
     """返回版本化清单在仓库中的固定位置。"""
 
-    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v3.json"
+    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v4.json"

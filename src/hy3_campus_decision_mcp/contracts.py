@@ -14,16 +14,27 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from .config import ToolProfile
 from .constants import MCP_CONTRACT_VERSION
-from .hy3.models import AcademicOutput, CampusQuestionOutput, CompetitionOutput, WeeklyPlanOutput
+from .hy3.models import (
+    AcademicOutput,
+    CampusQuestionOutput,
+    CompetitionCandidateExplanationOutput,
+    CompetitionOutput,
+    SelectedCompetitionComparisonOutput,
+    WeeklyPlanOutput,
+)
 from .schemas import (
     AcademicAnalysisInput,
     CampusQuestionInput,
+    CompareSelectedCompetitionsInput,
     CompetitionCompareInput,
+    ExplainCompetitionCandidatesInput,
     PlanStudentWeekInput,
 )
 from .tools.analyze_academic_snapshot import analyze_academic_snapshot
 from .tools.answer_campus_question import answer_campus_question
 from .tools.compare_competitions import compare_competitions
+from .tools.compare_selected_competitions import compare_selected_competitions
+from .tools.explain_competition_candidates import explain_competition_candidates
 from .tools.plan_student_week import plan_student_week
 from .tools.runtime import ToolRuntime
 
@@ -44,7 +55,7 @@ class ModelMetadata(StrictContractModel):
 
 
 class ResultMetadata(StrictContractModel):
-    schema_version: Literal["1"]
+    schema_version: Literal["2"]
     generated_at: datetime
 
 
@@ -119,6 +130,15 @@ class CompetitionFindings(StrictContractModel):
     comparisons: list[CompetitionComparison] = Field(min_length=2, max_length=5)
 
 
+class CandidateExplanationFindings(StrictContractModel):
+    competition_ids: list[str] = Field(min_length=1, max_length=20)
+    rule_order: list[int] = Field(min_length=1, max_length=20)
+
+
+class SelectedComparisonFindings(StrictContractModel):
+    competition_ids: list[str] = Field(min_length=2, max_length=4)
+
+
 class AcademicFindings(StrictContractModel):
     failed_course_count: int = Field(ge=0, le=500)
     failed_required_credits: float = Field(ge=0, le=1_000)
@@ -175,6 +195,26 @@ class CompetitionSuccessEnvelope(StrictContractModel):
     meta: ResultMetadata
 
 
+class CandidateExplanationSuccessEnvelope(StrictContractModel):
+    status: Literal["ok"]
+    result: CompetitionCandidateExplanationOutput
+    deterministic_findings: CandidateExplanationFindings
+    sources: list[SourceMetadata] = Field(default_factory=list, max_length=0)
+    warnings: list[str] = Field(default_factory=list, max_length=20)
+    model: ModelMetadata
+    meta: ResultMetadata
+
+
+class SelectedComparisonSuccessEnvelope(StrictContractModel):
+    status: Literal["ok"]
+    result: SelectedCompetitionComparisonOutput
+    deterministic_findings: SelectedComparisonFindings
+    sources: list[SourceMetadata] = Field(default_factory=list, max_length=0)
+    warnings: list[str] = Field(default_factory=list, max_length=20)
+    model: ModelMetadata
+    meta: ResultMetadata
+
+
 class AcademicSuccessEnvelope(StrictContractModel):
     status: Literal["ok"]
     result: AcademicOutput
@@ -200,6 +240,12 @@ CampusQuestionResponse = Annotated[
 ]
 CompetitionResponse = Annotated[
     CompetitionSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
+]
+CandidateExplanationResponse = Annotated[
+    CandidateExplanationSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
+]
+SelectedComparisonResponse = Annotated[
+    SelectedComparisonSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")
 ]
 AcademicResponse = Annotated[AcademicSuccessEnvelope | ErrorEnvelope, Field(discriminator="status")]
 WeeklyPlanResponse = Annotated[
@@ -248,6 +294,20 @@ TOOL_CONTRACTS: dict[str, ToolContract] = {
         output_model=CompetitionResponse,
         handler=compare_competitions,
     ),
+    "explain_competition_candidates": ToolContract(
+        name="explain_competition_candidates",
+        description="只解释 Go 已批准且已排序的赛事候选，不新增、不评分、不重排。",
+        input_model=ExplainCompetitionCandidatesInput,
+        output_model=CandidateExplanationResponse,
+        handler=explain_competition_candidates,
+    ),
+    "compare_selected_competitions": ToolContract(
+        name="compare_selected_competitions",
+        description="比较用户主动选择的 2 至 4 项赛事，不生成综合分。",
+        input_model=CompareSelectedCompetitionsInput,
+        output_model=SelectedComparisonResponse,
+        handler=compare_selected_competitions,
+    ),
     "analyze_academic_snapshot": ToolContract(
         name="analyze_academic_snapshot",
         description="分析非身份化学业快照，计算学分、挂科和数据完整度。",
@@ -268,18 +328,26 @@ TOOL_CONTRACTS: dict[str, ToolContract] = {
 # 同步升级契约版本并同时更新两端，而不能仅修改状态响应。
 SYLULIVE_RUNTIME_TOOL_NAMES = (
     "compare_competitions",
+    "explain_competition_candidates",
+    "compare_selected_competitions",
     "analyze_academic_snapshot",
     "plan_student_week",
 )
 PINNED_TOOL_CONTRACTS = {
     "compare_competitions": {
-        "schema_sha256": "b72f014a42546f6ab348c42a28203f859ee2b131ed00fefea6bf9db71dfbdff4",
+        "schema_sha256": "183668200d82156e6385342d747d229e5ab8fe49ba4351afaf8fccc9c896905c",
+    },
+    "explain_competition_candidates": {
+        "schema_sha256": "869bed351400771f7272b5c05b97d2c20875c7ddff0db65cb9d064b5c1f84721",
+    },
+    "compare_selected_competitions": {
+        "schema_sha256": "b8e151f2e964f96dcbc5d533632da63f5adf9b7106f681d861edb7f05cc0b463",
     },
     "analyze_academic_snapshot": {
-        "schema_sha256": "0784c8d703113093229e97a005f51e7e80d87a952e803286bcca7359ae2c5988",
+        "schema_sha256": "fc50ff6b196c409d59df53df777f49b265fd4bfa66e34969e5787527a38fad23",
     },
     "plan_student_week": {
-        "schema_sha256": "d3e2930561ed3f7c23923ffd18ca74373d86dcffd1db78a953566684ab8535fb",
+        "schema_sha256": "0cb4a9c774ea6799b8f95945d89c21195c0cb228315ab73fd849259814cc7518",
     },
 }
 
@@ -338,4 +406,4 @@ def build_contract_manifest() -> dict[str, Any]:
 def committed_manifest_path() -> Path:
     """返回版本化清单在仓库中的固定位置。"""
 
-    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-hy3-v1.json"
+    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-hy3-v2.json"

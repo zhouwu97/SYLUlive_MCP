@@ -20,7 +20,7 @@ class StrictOutputModel(BaseModel):
 
 
 class ResultMetadata(StrictOutputModel):
-    schema_version: Literal["3"]
+    schema_version: Literal["4"]
     generated_at: datetime
 
 
@@ -160,6 +160,88 @@ class CompetitionComparison(StrictOutputModel):
 class CompetitionCompareSuccess(StrictOutputModel):
     status: Literal["ok"]
     competitions: list[CompetitionComparison] = Field(min_length=2, max_length=5)
+    meta: ResultMetadata
+
+
+class CompetitionCandidateContextInput(StrictInputModel):
+    competition_ids: list[StableId] = Field(min_length=1, max_length=20)
+
+
+class CompetitionCandidateFacts(StrictOutputModel):
+    title: str = Field(min_length=1, max_length=200)
+    competition_level: str = Field(default="", max_length=100)
+    school_recognition_status: str = Field(default="", max_length=100)
+    school_recognition_grade: str = Field(default="", max_length=100)
+    competition_rating: str = Field(default="", max_length=20)
+    participation_type: str = Field(default="", max_length=100)
+    team_size_min: int = Field(default=0, ge=0, le=100)
+    team_size_max: int = Field(default=0, ge=0, le=100)
+    registration_time_text: str = Field(default="", max_length=255)
+    event_time_text: str = Field(default="", max_length=255)
+    time_status: str = Field(default="pending", max_length=40)
+    major_fit_summary_public: str = Field(default="", max_length=1_000)
+    evidence_summary_public: str = Field(default="", max_length=1_000)
+    evidence_subgrade: str = Field(default="", max_length=20)
+
+
+class CompetitionMatchDimensions(StrictOutputModel):
+    eligibility: str = Field(max_length=40)
+    major: str = Field(max_length=40)
+    college: str = Field(max_length=40)
+    grade: str = Field(max_length=40)
+    goal: str = Field(max_length=40)
+    direction: str = Field(max_length=40)
+    skill: str = Field(max_length=40)
+    role: str = Field(max_length=40)
+    time: str = Field(max_length=40)
+    training: str = Field(max_length=40)
+
+
+class CompetitionCandidateGates(StrictOutputModel):
+    candidate_pool_allowed: bool
+    personalized_ranking_allowed: bool
+    strong_recommendation_eligible: bool
+    recommendation_permission_level: str = Field(max_length=20)
+    ai_mode: str = Field(max_length=40)
+
+
+class CompetitionCandidateContextItem(StrictOutputModel):
+    competition_id: StableId
+    record_hash: str = Field(min_length=1, max_length=64)
+    dataset_version: str = Field(min_length=1, max_length=100)
+    facts: CompetitionCandidateFacts
+    match_dimensions: CompetitionMatchDimensions
+    risk_tags: list[str] = Field(default_factory=list, max_length=20)
+    gates: CompetitionCandidateGates
+
+
+class CompetitionCandidateContextSuccess(StrictOutputModel):
+    status: Literal["ok"]
+    candidates: list[CompetitionCandidateContextItem] = Field(default_factory=list, max_length=20)
+    missing_competition_ids: list[StableId] = Field(default_factory=list, max_length=20)
+    meta: ResultMetadata
+
+
+class CompetitionRecordRef(StrictInputModel):
+    competition_id: StableId
+    record_hash: str = Field(min_length=1, max_length=64)
+
+
+class CompetitionVerifyRecordsInput(StrictInputModel):
+    records: list[CompetitionRecordRef] = Field(min_length=1, max_length=50)
+
+
+class CompetitionRecordVerification(StrictOutputModel):
+    competition_id: StableId
+    record_hash: str = Field(default="", max_length=64)
+    valid: bool
+    reason: str = Field(default="", max_length=100)
+    ai_mode: str = Field(default="", max_length=40)
+
+
+class CompetitionVerifyRecordsSuccess(StrictOutputModel):
+    status: Literal["ok"]
+    records: list[CompetitionRecordVerification] = Field(min_length=1, max_length=50)
     meta: ResultMetadata
 
 
