@@ -120,18 +120,18 @@
 
 ## 2026-07-30 本地部署前门禁
 
-本节只记录隔离工作树的本地验证，不表示新契约已经部署到生产。
+本节只记录当前本地工作区的验证，不表示新契约已经部署到生产。
 
 | 字段 | 记录值 |
 | --- | --- |
-| 纯工具契约 | `sylulive-mcp/4` |
-| 纯工具包版本 | `0.4.0` |
+| 纯工具契约 | `sylulive-mcp/5` |
+| 纯工具包版本 | `0.5.0` |
 | Hy3 契约 | `sylulive-hy3/2` |
 | Hy3 包版本 | `0.2.0` |
-| Python 测试 | `62 passed` |
+| Python 测试 | `63 passed` |
 | Ruff | format 与 lint 均通过 |
 | Fixture stdio | 五个生产工具逐项调用通过 |
-| `sylulive-mcp-v4.json` | `28f3ca1b43a61c6a00fcca65d0b7beb5d7cbf07ea8070177aac7c6993b019ed5` |
+| `sylulive-mcp-v5.json` | `21bdd92b4988f29bca9f6b6f4c3170e4d8ebe702745f09f26782587cb9fc5973` |
 | `sylulive-hy3-v2.json` | `e0afd2958c097c255933c1ac826e81dc75fe30ac7ccd9039cbb2a49916a4042a` |
 
 Hy3 五个固定工具及 Schema SHA-256：

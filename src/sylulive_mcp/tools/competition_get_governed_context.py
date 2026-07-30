@@ -1,4 +1,4 @@
-"""读取 Go 已批准候选的公开解释上下文。"""
+"""读取 Go 治理后的公开候选上下文。"""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ def _demo_candidate(item: dict[str, Any]) -> dict[str, Any]:
             "school_recognition_status": "",
             "school_recognition_grade": item["school_recognition"],
             "competition_rating": item["manual_rating"],
+            "manual_rating_reason_public": "",
             "participation_type": "",
             "team_size_min": 0,
             "team_size_max": 0,
@@ -63,10 +64,10 @@ def _demo_candidate(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def competition_get_candidate_context(
+async def competition_get_governed_context(
     runtime: ToolRuntime, raw: dict[str, Any]
 ) -> dict[str, Any]:
-    """按输入顺序返回公开安全事实、哈希与权限门。"""
+    """按输入顺序返回 Go 治理后的公开事实、哈希与权限门。"""
 
     async def operation() -> dict[str, Any]:
         request = runtime.validate_input(CompetitionCandidateContextInput, raw)

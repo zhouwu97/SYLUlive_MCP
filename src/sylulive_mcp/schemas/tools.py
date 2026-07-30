@@ -20,13 +20,14 @@ class StrictOutputModel(BaseModel):
 
 
 class ResultMetadata(StrictOutputModel):
-    schema_version: Literal["4"]
+    schema_version: Literal["5"]
     generated_at: datetime
 
 
 QueryText = Annotated[str, Field(min_length=1, max_length=1_000)]
 DocumentType = Annotated[str, Field(min_length=1, max_length=200)]
 StableId = Annotated[str, Field(min_length=1, max_length=300)]
+CompetitionId = Annotated[str, Field(min_length=1, max_length=64)]
 Category = Annotated[str, Field(min_length=1, max_length=100)]
 
 
@@ -99,7 +100,7 @@ class CompetitionSearchInput(StrictInputModel):
 
 
 class CompetitionFact(StrictInputModel):
-    competition_id: str = Field(min_length=1, max_length=200)
+    competition_id: CompetitionId
     name: str = Field(min_length=1, max_length=200)
     categories: list[Category] = Field(default_factory=list, max_length=10)
     school_recognition: str = Field(default="not_provided", max_length=100)
@@ -119,18 +120,18 @@ class CompetitionSearchSuccess(StrictOutputModel):
 
 
 class CompetitionGetDetailsInput(StrictInputModel):
-    competition_ids: list[StableId] = Field(min_length=1, max_length=5)
+    competition_ids: list[CompetitionId] = Field(min_length=1, max_length=5)
 
 
 class CompetitionDetailsSuccess(StrictOutputModel):
     status: Literal["ok"]
     competitions: list[CompetitionFact] = Field(default_factory=list, max_length=5)
-    missing_competition_ids: list[str] = Field(default_factory=list, max_length=5)
+    missing_competition_ids: list[CompetitionId] = Field(default_factory=list, max_length=5)
     meta: ResultMetadata
 
 
 class CompetitionCompareFactsInput(StrictInputModel):
-    competition_ids: list[StableId] = Field(min_length=2, max_length=5)
+    competition_ids: list[CompetitionId] = Field(min_length=2, max_length=5)
     available_weekly_hours: int | None = Field(default=None, ge=1, le=40)
 
 
@@ -146,7 +147,7 @@ class ProfileMatch(StrictOutputModel):
 
 
 class CompetitionComparison(StrictOutputModel):
-    competition_id: str
+    competition_id: CompetitionId
     name: str
     school_recognition: str
     manual_rating: str
@@ -164,7 +165,7 @@ class CompetitionCompareSuccess(StrictOutputModel):
 
 
 class CompetitionCandidateContextInput(StrictInputModel):
-    competition_ids: list[StableId] = Field(min_length=1, max_length=20)
+    competition_ids: list[CompetitionId] = Field(min_length=1, max_length=20)
 
 
 class CompetitionCandidateFacts(StrictOutputModel):
@@ -173,6 +174,7 @@ class CompetitionCandidateFacts(StrictOutputModel):
     school_recognition_status: str = Field(default="", max_length=100)
     school_recognition_grade: str = Field(default="", max_length=100)
     competition_rating: str = Field(default="", max_length=20)
+    manual_rating_reason_public: str = Field(default="", max_length=1_000)
     participation_type: str = Field(default="", max_length=100)
     team_size_min: int = Field(default=0, ge=0, le=100)
     team_size_max: int = Field(default=0, ge=0, le=100)
@@ -206,8 +208,8 @@ class CompetitionCandidateGates(StrictOutputModel):
 
 
 class CompetitionCandidateContextItem(StrictOutputModel):
-    competition_id: StableId
-    record_hash: str = Field(min_length=1, max_length=64)
+    competition_id: CompetitionId
+    record_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     dataset_version: str = Field(min_length=1, max_length=100)
     facts: CompetitionCandidateFacts
     match_dimensions: CompetitionMatchDimensions
@@ -218,13 +220,13 @@ class CompetitionCandidateContextItem(StrictOutputModel):
 class CompetitionCandidateContextSuccess(StrictOutputModel):
     status: Literal["ok"]
     candidates: list[CompetitionCandidateContextItem] = Field(default_factory=list, max_length=20)
-    missing_competition_ids: list[StableId] = Field(default_factory=list, max_length=20)
+    missing_competition_ids: list[CompetitionId] = Field(default_factory=list, max_length=20)
     meta: ResultMetadata
 
 
 class CompetitionRecordRef(StrictInputModel):
-    competition_id: StableId
-    record_hash: str = Field(min_length=1, max_length=64)
+    competition_id: CompetitionId
+    record_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class CompetitionVerifyRecordsInput(StrictInputModel):
@@ -232,8 +234,8 @@ class CompetitionVerifyRecordsInput(StrictInputModel):
 
 
 class CompetitionRecordVerification(StrictOutputModel):
-    competition_id: StableId
-    record_hash: str = Field(default="", max_length=64)
+    competition_id: CompetitionId
+    record_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     valid: bool
     reason: str = Field(default="", max_length=100)
     ai_mode: str = Field(default="", max_length=40)

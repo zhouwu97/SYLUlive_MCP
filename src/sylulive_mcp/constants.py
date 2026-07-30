@@ -1,8 +1,8 @@
 """包内稳定常量。"""
 
-PACKAGE_VERSION = "0.4.0"
-RESULT_SCHEMA_VERSION = "4"
-MCP_CONTRACT_VERSION = "sylulive-mcp/4"
+PACKAGE_VERSION = "0.5.0"
+RESULT_SCHEMA_VERSION = "5"
+MCP_CONTRACT_VERSION = "sylulive-mcp/5"
 SERVER_NAME = "SYLUlive MCP Tools"
 ALLOWED_SOURCE_EXTENSIONS = frozenset({".md", ".txt", ".json", ".jsonl", ".csv"})
 CORE_TOOL_NAMES = (
@@ -10,7 +10,7 @@ CORE_TOOL_NAMES = (
     "policy_get_sources",
     "competition_search",
     "competition_get_details",
-    "competition_get_candidate_context",
+    "competition_get_governed_context",
     "competition_verify_records",
     "competition_compare_facts",
     "academic_get_summary",
@@ -22,7 +22,7 @@ DEMO_TOOL_NAMES = (
     "policy_get_sources",
     "competition_search",
     "competition_get_details",
-    "competition_get_candidate_context",
+    "competition_get_governed_context",
     "competition_verify_records",
     "competition_compare_facts",
     "academic_calculate_summary",

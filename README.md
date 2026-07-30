@@ -30,6 +30,8 @@ Flutter
 | `policy_get_sources` | 复核最多 8 个来源的发布状态、有效期和内容哈希 |
 | `competition_search` | 按名称或类别检索赛事事实 |
 | `competition_get_details` | 获取最多 5 项赛事详情 |
+| `competition_get_governed_context` | 读取 Go 治理后的公开候选事实、记录摘要与权限门 |
+| `competition_verify_records` | 复核候选记录的发布状态、候选权限与记录摘要 |
 | `competition_compare_facts` | 按稳定 ID 读取并比较 Go 持有的赛事事实 |
 | `academic_get_summary` | 通过 Grant 获取最小化学业汇总，不接收课程或成绩明细 |
 | `schedule_find_free_windows` | 通过 Grant 获取固定日程并计算空闲窗口 |
@@ -110,7 +112,7 @@ Go 在接受 Agent 的结构化回答前仍必须验证：
 
 ## 契约与验证
 
-契约版本为 `sylulive-mcp/4`，版本化清单位于 `assets/contracts/sylulive-mcp-v4.json`。
+契约版本为 `sylulive-mcp/5`，版本化清单位于 `assets/contracts/sylulive-mcp-v5.json`。
 清单分别记录 production 与 demo 注册表，默认集成应使用 production 契约。
 
 ```powershell

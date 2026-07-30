@@ -8,7 +8,7 @@ from ..config import ServiceMode
 from ..result_envelope import result_meta
 from ..schemas.tools import CompetitionVerifyRecordsInput
 from .competition_common import demo_competition_facts
-from .competition_get_candidate_context import _demo_candidate
+from .competition_get_governed_context import _demo_candidate
 from .runtime import ToolRuntime
 
 
@@ -23,6 +23,9 @@ async def competition_verify_records(runtime: ToolRuntime, raw: dict[str, Any]) 
                 request.model_dump(mode="json"),
             )
             records = list(response.get("records") or [])
+            for record in records:
+                if not record.get("record_hash"):
+                    record["record_hash"] = None
         else:
             current = {
                 item["competition_id"]: _demo_candidate(item)
@@ -35,7 +38,7 @@ async def competition_verify_records(runtime: ToolRuntime, raw: dict[str, Any]) 
                 records.append(
                     {
                         "competition_id": record.competition_id,
-                        "record_hash": candidate["record_hash"] if candidate else "",
+                        "record_hash": candidate["record_hash"] if candidate else None,
                         "valid": valid,
                         "reason": "" if valid else "not_found_or_hash_changed",
                         "ai_mode": candidate["gates"]["ai_mode"] if candidate else "",

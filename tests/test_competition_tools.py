@@ -8,10 +8,10 @@ import httpx
 
 from sylulive_mcp.config import ServiceMode, Settings
 from sylulive_mcp.tools.competition_compare_facts import competition_compare_facts
-from sylulive_mcp.tools.competition_get_candidate_context import (
-    competition_get_candidate_context,
-)
 from sylulive_mcp.tools.competition_get_details import competition_get_details
+from sylulive_mcp.tools.competition_get_governed_context import (
+    competition_get_governed_context,
+)
 from sylulive_mcp.tools.competition_search import competition_search
 from sylulive_mcp.tools.competition_verify_records import competition_verify_records
 from sylulive_mcp.tools.runtime import ToolRuntime
@@ -118,6 +118,7 @@ async def test_candidate_context_and_record_verification_use_go_as_authority() -
                                 "school_recognition_status": "recognized",
                                 "school_recognition_grade": "B+",
                                 "competition_rating": "A",
+                                "manual_rating_reason_public": "校级目录人工评定",
                                 "participation_type": "团队赛",
                                 "team_size_min": 3,
                                 "team_size_max": 3,
@@ -176,7 +177,7 @@ async def test_candidate_context_and_record_verification_use_go_as_authority() -
     runtime = ToolRuntime(settings, api_transport=httpx.MockTransport(handler))
     try:
         with runtime.grants.bind("competition-grant"):
-            context = await competition_get_candidate_context(
+            context = await competition_get_governed_context(
                 runtime, {"competition_ids": ["NAT-006"]}
             )
             verified = await competition_verify_records(

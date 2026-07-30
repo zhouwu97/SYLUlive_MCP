@@ -44,8 +44,8 @@ from .tools import (
     academic_calculate_summary,
     academic_get_summary,
     competition_compare_facts,
-    competition_get_candidate_context,
     competition_get_details,
+    competition_get_governed_context,
     competition_search,
     competition_verify_records,
     policy_get_sources,
@@ -127,12 +127,12 @@ _SHARED_TOOL_CONTRACTS: dict[str, ToolContract] = {
         response_type(CompetitionDetailsSuccess),
         competition_get_details,
     ),
-    "competition_get_candidate_context": ToolContract(
-        "competition_get_candidate_context",
-        "按稳定标识读取 Go 已批准候选的公开解释上下文、记录摘要与权限门。",
+    "competition_get_governed_context": ToolContract(
+        "competition_get_governed_context",
+        "按稳定标识读取 Go 治理后的公开候选事实、记录摘要与权限门。",
         CompetitionCandidateContextInput,
         response_type(CompetitionCandidateContextSuccess),
-        competition_get_candidate_context,
+        competition_get_governed_context,
     ),
     "competition_verify_records": ToolContract(
         "competition_verify_records",
@@ -277,4 +277,4 @@ def build_contract_manifest() -> dict[str, Any]:
 def committed_manifest_path() -> Path:
     """返回版本化清单在仓库中的固定位置。"""
 
-    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v4.json"
+    return Path(__file__).resolve().parents[2] / "assets" / "contracts" / "sylulive-mcp-v5.json"

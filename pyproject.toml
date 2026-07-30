@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sylulive-mcp"
-version = "0.4.0"
+version = "0.5.0"
 description = "面向 SYLUlive Agent 的纯工具型 MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"
